@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leave Approval API Tester</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .panel {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 15px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #47BCCB;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3da7b6;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .endpoint-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .endpoint-selector button {
+      flex: 1;
+    }
+    .active {
+      background-color: #3da7b6;
+      font-weight: bold;
+    }
+    .request-info {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Leave Approval API Tester</h1>
+  
+  <div class="container">
+    <div class="panel">
+      <h2>Authentication</h2>
+      <div class="form-group">
+        <label for="token">Admin Token:</label>
+        <input type="text" id="token" placeholder="Enter your admin token">
+      </div>
+      <div class="form-group">
+        <label for="apiUrl">API URL:</label>
+        <input type="text" id="apiUrl" value="http://localhost:4000" placeholder="Enter API URL">
+      </div>
+      <button onclick="saveAuth()">Save Authentication</button>
+    </div>
+
+    <div class="panel">
+      <h2>Get Leave Applications for Approval</h2>
+      
+      <div class="endpoint-selector">
+        <button onclick="setEndpoint('pending-approvals')" class="active" id="btn-pending-approvals">Pending Approvals</button>
+        <button onclick="setEndpoint('all')" id="btn-all">All Applications</button>
+        <button onclick="setEndpoint('approved')" id="btn-approved">Approved</button>
+        <button onclick="setEndpoint('rejected')" id="btn-rejected">Rejected</button>
+      </div>
+      
+      <div class="form-group">
+        <label for="department">Department Filter (optional):</label>
+        <input type="text" id="department" placeholder="Enter department name">
+      </div>
+      
+      <button onclick="fetchLeaveApplications()">Fetch Leave Applications</button>
+      
+      <div class="request-info" id="request-info"></div>
+      
+      <h3>Response:</h3>
+      <pre id="response"></pre>
+    </div>
+  </div>
+
+  <script>
+    let currentEndpoint = 'pending-approvals';
+    
+    function saveAuth() {
+      const token = document.getElementById('token').value;
+      const apiUrl = document.getElementById('apiUrl').value;
+      
+      localStorage.setItem('adminToken', token);
+      localStorage.setItem('apiUrl', apiUrl);
+      
+      alert('Authentication saved!');
+    }
+    
+    function setEndpoint(endpoint) {
+      currentEndpoint = endpoint;
+      
+      // Update active button
+      document.querySelectorAll('.endpoint-selector button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(`btn-${endpoint}`).classList.add('active');
+    }
+    
+    function fetchLeaveApplications() {
+      const token = localStorage.getItem('adminToken');
+      const apiUrl = localStorage.getItem('apiUrl');
+      const department = document.getElementById('department').value;
+      
+      if (!token) {
+        alert('Please save authentication first!');
+        return;
+      }
+      
+      const responseElement = document.getElementById('response');
+      const requestInfoElement = document.getElementById('request-info');
+      responseElement.textContent = 'Loading...';
+      
+      let url;
+      let params = new URLSearchParams();
+      
+      if (currentEndpoint === 'pending-approvals') {
+        url = `${apiUrl}/api/leave-management/leave-applications/pending-approvals`;
+      } else if (currentEndpoint === 'all') {
+        url = `${apiUrl}/api/leave-management/leave-applications`;
+      } else {
+        url = `${apiUrl}/api/leave-management/leave-applications`;
+        params.append('status', currentEndpoint);
+      }
+      
+      if (department) {
+        params.append('department', department);
+      }
+      
+      const finalUrl = params.toString() ? `${url}?${params.toString()}` : url;
+      
+      requestInfoElement.innerHTML = `
+        <strong>Request URL:</strong> ${finalUrl}<br>
+        <strong>Headers:</strong> Authorization: Bearer ${token.substring(0, 10)}...
+      `;
+      
+      console.log(`Fetching from URL: ${finalUrl}`);
+      
+      fetch(finalUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Admintoken': token,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        requestInfoElement.innerHTML += `<br><strong>Response Status:</strong> ${response.status} ${response.statusText}`;
+        return response.json();
+      })
+      .then(data => {
+        console.log('Response data:', data);
+        
+        // Analyze the structure of the response
+        let analysisText = '';
+        if (data) {
+          if (Array.isArray(data)) {
+            analysisText = `<br><strong>Response structure:</strong> Array with ${data.length} items`;
+          } else if (data.data && Array.isArray(data.data)) {
+            analysisText = `<br><strong>Response structure:</strong> Object with data array containing ${data.data.length} items`;
+          } else {
+            analysisText = `<br><strong>Response structure:</strong> Object with keys: ${Object.keys(data).join(', ')}`;
+          }
+        }
+        
+        requestInfoElement.innerHTML += analysisText;
+        responseElement.textContent = JSON.stringify(data, null, 2);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        responseElement.textContent = `Error: ${error.message}`;
+      });
+    }
+    
+    // Load saved values
+    window.onload = function() {
+      const token = localStorage.getItem('adminToken');
+      const apiUrl = localStorage.getItem('apiUrl');
+      
+      if (token) document.getElementById('token').value = token;
+      if (apiUrl) document.getElementById('apiUrl').value = apiUrl;
+    };
+  </script>
+</body>
+</html>

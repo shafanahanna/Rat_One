@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Application API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #47BCCB;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #47BCCB;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3da7b6;
+        }
+        .results {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Leave Application API Tester</h1>
+    
+    <div class="container">
+        <div class="card">
+            <h2>Test Leave Application Status Filtering</h2>
+            <div class="form-group">
+                <label for="apiUrl">API Base URL:</label>
+                <input type="text" id="apiUrl" value="http://localhost:3000" />
+            </div>
+            <div class="form-group">
+                <label for="token">Authentication Token (optional):</label>
+                <input type="text" id="token" placeholder="Bearer token" />
+            </div>
+            <div class="form-group">
+                <label for="status">Status Filter:</label>
+                <select id="status">
+                    <option value="">All (no filter)</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <button id="testButton">Test API</button>
+        </div>
+        
+        <div class="card">
+            <h2>Results</h2>
+            <div id="resultsContainer">
+                <div class="results" id="resultsOutput">No results yet. Click "Test API" to start.</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Leave Applications</h2>
+            <div id="leaveTable">
+                <p>No data loaded yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testButton').addEventListener('click', async () => {
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const token = document.getElementById('token').value.trim();
+            const status = document.getElementById('status').value;
+            
+            const resultsOutput = document.getElementById('resultsOutput');
+            resultsOutput.textContent = 'Loading...';
+            
+            try {
+                // Build the endpoint URL with query parameters
+                const endpoint = '/api/leave-management/leave-applications';
+                const url = new URL(endpoint, apiUrl);
+                
+                if (status) {
+                    url.searchParams.append('status', status);
+                }
+                
+                // Set up headers
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (token) {
+                    headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+                }
+                
+                // Log the request details
+                const requestLog = `REQUEST:
+API URL: ${url}
+Status Filter: ${status || 'All (no filter)'}
+Headers: ${JSON.stringify(headers, null, 2)}
+`;
+                resultsOutput.textContent = requestLog;
+                
+                // Make the API request
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers
+                });
+                
+                const data = await response.json();
+                
+                // Process and display the results
+                const statusCounts = {};
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        const itemStatus = (item.status || '').toLowerCase();
+                        statusCounts[itemStatus] = (statusCounts[itemStatus] || 0) + 1;
+                    });
+                }
+                
+                const responseLog = `${requestLog}
+RESPONSE:
+Status Code: ${response.status}
+Data Type: ${typeof data}
+Is Array: ${Array.isArray(data)}
+Results Count: ${Array.isArray(data) ? data.length : 'N/A'}
+Status Counts: ${JSON.stringify(statusCounts, null, 2)}
+`;
+                
+                resultsOutput.textContent = responseLog;
+                
+                // Display the leave applications in a table
+                displayLeaveTable(data);
+                
+            } catch (error) {
+                resultsOutput.textContent = `Error: ${error.message}`;
+                document.getElementById('leaveTable').innerHTML = '<p>Error loading data.</p>';
+            }
+        });
+        
+        function displayLeaveTable(data) {
+            const tableContainer = document.getElementById('leaveTable');
+            
+            if (!Array.isArray(data) || data.length === 0) {
+                tableContainer.innerHTML = '<p>No leave applications found.</p>';
+                return;
+            }
+            
+            // Create table
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Employee</th>
+                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Working Days</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // Add rows
+            data.forEach(leave => {
+                const startDate = new Date(leave.start_date).toLocaleDateString();
+                const endDate = new Date(leave.end_date).toLocaleDateString();
+                
+                let statusClass = '';
+                if (leave.status?.toLowerCase() === 'pending') statusClass = 'pending';
+                if (leave.status?.toLowerCase() === 'approved') statusClass = 'approved';
+                if (leave.status?.toLowerCase() === 'rejected') statusClass = 'rejected';
+                
+                tableHtml += `
+                    <tr>
+                        <td>${leave.id || 'N/A'}</td>
+                        <td>${leave.employee?.fullName || leave.employee_name || 'N/A'}</td>
+                        <td>${leave.leaveType?.name || leave.leave_type || 'N/A'}</td>
+                        <td>${startDate}</td>
+                        <td>${endDate}</td>
+                        <td>${leave.working_days || 'N/A'}</td>
+                        <td><span class="status-badge ${statusClass}">${leave.status || 'N/A'}</span></td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+            
+            tableContainer.innerHTML = tableHtml;
+        }
+    </script>
+</body>
+</html>

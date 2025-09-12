@@ -1,0 +1,39 @@
+### Test the leave application status endpoint
+# First, get a token (replace with your actual credentials)
+# @name login
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "password123"
+}
+
+###
+@authToken = {{login.response.body.access_token}}
+
+### Get all leave applications
+GET http://localhost:3000/api/leave-management/leave-applications
+Authorization: Bearer {{authToken}}
+
+### Get pending leave applications
+GET http://localhost:3000/api/leave-management/leave-applications?status=pending
+Authorization: Bearer {{authToken}}
+
+### Get approved leave applications
+GET http://localhost:3000/api/leave-management/leave-applications?status=approved
+Authorization: Bearer {{authToken}}
+
+### Get rejected leave applications
+GET http://localhost:3000/api/leave-management/leave-applications?status=rejected
+Authorization: Bearer {{authToken}}
+
+### Update a leave application status (replace with actual leave application ID)
+PUT http://localhost:3000/api/leave-management/leave-applications/LEAVE_APPLICATION_ID/status
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "status": "approved",
+  "comments": "Leave approved as requested"
+}

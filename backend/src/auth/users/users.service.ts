@@ -1,0 +1,171 @@
+import { Injectable } from '@nestjs/common';
+import { DatabaseService } from '../database.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcryptjs';
+import { User } from '../entities/user.entity';
+
+@Injectable()
+export class UsersService {
+  constructor(private readonly databaseService: DatabaseService) {}
+
+  async findAll(): Promise<any[]> {
+    // Using TypeORM repository
+    const userRepository = this.databaseService.getRepository(User);
+    const users = await userRepository.find({
+      select: ['id', 'username', 'email', 'role', 'created_at']
+    });
+    
+    // Map username to name for frontend consistency
+    return users.map(user => ({
+      id: user.id,
+      name: user.username,
+      email: user.email,
+      role: user.role,
+      created_at: user.created_at
+    }));
+  }
+
+  async findOne(id: string): Promise<any> {
+    const userRepository = this.databaseService.getRepository(User);
+    const user = await userRepository.findOne({ 
+      where: { id },
+      select: ['id', 'username', 'email', 'role', 'employee_id', 'country_id', 'branch_id', 'created_at']
+    });
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    // Map username to name for frontend consistency
+    return {
+      id: user.id,
+      name: user.username,
+      email: user.email,
+      role: user.role,
+      employee_id: user.employee_id,
+      country_id: user.country_id,
+      branch_id: user.branch_id,
+      created_at: user.created_at
+    };
+  }
+
+  async create(createUserDto: CreateUserDto): Promise<any> {
+    const { name, email, password, role } = createUserDto;
+    
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Using TypeORM repository
+    const userRepository = this.databaseService.getRepository(User);
+    
+    const newUser = userRepository.create({
+      username: name,
+      email: email.toLowerCase(),
+      password_hash: hashedPassword,
+      role
+    });
+    
+    const savedUser = await userRepository.save(newUser);
+    
+    // Return user without password
+    return {
+      id: savedUser.id,
+      name: savedUser.username,
+      email: savedUser.email,
+      role: savedUser.role,
+      created_at: savedUser.created_at
+    };
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<any> {
+    const userRepository = this.databaseService.getRepository(User);
+    const user = await userRepository.findOne({ where: { id } });
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    // Update user properties
+    if (updateUserDto.name) {
+      user.username = updateUserDto.name;
+    }
+    
+    if (updateUserDto.email) {
+      user.email = updateUserDto.email.toLowerCase();
+    }
+    
+    if (updateUserDto.role) {
+      user.role = updateUserDto.role;
+    }
+    
+    if (updateUserDto.password) {
+      user.password_hash = await bcrypt.hash(updateUserDto.password, 10);
+    }
+    
+    // Save updated user
+    const updatedUser = await userRepository.save(user);
+    
+    // Return user without password
+    return {
+      id: updatedUser.id,
+      name: updatedUser.username,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      created_at: updatedUser.created_at,
+      updated_at: updatedUser.updated_at
+    };
+  }
+
+  async remove(id: string): Promise<void> {
+    const userRepository = this.databaseService.getRepository(User);
+    
+    // Check if user exists
+    const user = await userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    // Prevent deletion of admin user
+    if (user.email.toLowerCase() === 'admin@hayaltravel.com') {
+      throw new Error('Cannot delete admin user');
+    }
+    
+    await userRepository.remove(user);
+  }
+
+  async getUnassignedUsers(): Promise<any[]> {
+    // First, get all users for debugging
+    const allUsersQuery = `SELECT id, username, role, employee_id FROM users`;
+    const allUsers = await this.databaseService.query(allUsersQuery);
+    console.log('All users in database:', allUsers);
+    
+    // Get all employees for debugging
+    const allEmployeesQuery = `SELECT id, user_id FROM employees`;
+    const allEmployees = await this.databaseService.query(allEmployeesQuery);
+    console.log('All employees in database:', allEmployees);
+    
+    // Get users who don't have an employee profile and are not Directors
+    const query = `
+      SELECT u.id, u.username as name, u.email, u.role, u.employee_id
+      FROM users u
+      WHERE NOT EXISTS (
+        SELECT 1 FROM employees e WHERE e.user_id = u.id
+      )
+      AND u.role != 'Director'
+      -- Removed the employee_id IS NULL condition since it might be filtering out valid users
+      ORDER BY u.username
+    `;
+    
+    console.log('Executing unassigned users query:', query);
+    const users = await this.databaseService.query(query);
+    console.log('Unassigned users query result:', users);
+    
+    return users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }));
+  }
+}

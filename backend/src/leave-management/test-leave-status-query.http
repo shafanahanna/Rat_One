@@ -1,0 +1,29 @@
+### Test the leave application status query parameter
+# First, get a token (replace with your actual credentials)
+# @name login
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "password123"
+}
+
+###
+@authToken = {{login.response.body.access_token}}
+
+### Get all leave applications
+GET http://localhost:3000/api/leave-management/leave-applications
+Authorization: Bearer {{authToken}}
+
+### Get pending leave applications using status parameter
+GET http://localhost:3000/api/leave-management/leave-applications?status=pending
+Authorization: Bearer {{authToken}}
+
+### Get approved leave applications using status parameter
+GET http://localhost:3000/api/leave-management/leave-applications?status=approved
+Authorization: Bearer {{authToken}}
+
+### Get rejected leave applications using status parameter
+GET http://localhost:3000/api/leave-management/leave-applications?status=rejected
+Authorization: Bearer {{authToken}}

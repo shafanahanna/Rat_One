@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leave Application API Tester</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .panel {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 15px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #47BCCB;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3da7b6;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .status-filter {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .status-filter button {
+      flex: 1;
+    }
+    .active {
+      background-color: #3da7b6;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Leave Application API Tester</h1>
+  
+  <div class="container">
+    <div class="panel">
+      <h2>Authentication</h2>
+      <div class="form-group">
+        <label for="token">Admin Token:</label>
+        <input type="text" id="token" placeholder="Enter your admin token">
+      </div>
+      <div class="form-group">
+        <label for="apiUrl">API URL:</label>
+        <input type="text" id="apiUrl" value="http://localhost:4000/api" placeholder="Enter API URL">
+      </div>
+      <button onclick="saveAuth()">Save Authentication</button>
+    </div>
+
+    <div class="panel">
+      <h2>Get Leave Applications</h2>
+      <div class="form-group">
+        <label for="employeeId">Employee ID:</label>
+        <input type="text" id="employeeId" placeholder="Enter employee ID">
+      </div>
+      
+      <div class="status-filter">
+        <button onclick="setStatus('all')" class="active" id="btn-all">All</button>
+        <button onclick="setStatus('pending')" id="btn-pending">Pending</button>
+        <button onclick="setStatus('approved')" id="btn-approved">Approved</button>
+        <button onclick="setStatus('rejected')" id="btn-rejected">Rejected</button>
+      </div>
+      
+      <button onclick="fetchLeaveApplications()">Fetch Leave Applications</button>
+      
+      <h3>Response:</h3>
+      <pre id="response"></pre>
+    </div>
+  </div>
+
+  <script>
+    let currentStatus = 'all';
+    
+    function saveAuth() {
+      const token = document.getElementById('token').value;
+      const apiUrl = document.getElementById('apiUrl').value;
+      
+      localStorage.setItem('adminToken', token);
+      localStorage.setItem('apiUrl', apiUrl);
+      
+      alert('Authentication saved!');
+    }
+    
+    function setStatus(status) {
+      currentStatus = status;
+      
+      // Update active button
+      document.querySelectorAll('.status-filter button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(`btn-${status}`).classList.add('active');
+    }
+    
+    function fetchLeaveApplications() {
+      const token = localStorage.getItem('adminToken');
+      const apiUrl = localStorage.getItem('apiUrl');
+      const employeeId = document.getElementById('employeeId').value;
+      
+      if (!token) {
+        alert('Please save authentication first!');
+        return;
+      }
+      
+      if (!employeeId) {
+        alert('Please enter an employee ID!');
+        return;
+      }
+      
+      const responseElement = document.getElementById('response');
+      responseElement.textContent = 'Loading...';
+      
+      let url = `${apiUrl}/leave-management/leave-applications/employee/${employeeId}`;
+      
+      if (currentStatus !== 'all') {
+        url += `?status=${currentStatus}`;
+      }
+      
+      console.log(`Fetching from URL: ${url}`);
+      
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Response data:', data);
+        responseElement.textContent = JSON.stringify(data, null, 2);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        responseElement.textContent = `Error: ${error.message}`;
+      });
+    }
+    
+    // Load saved values
+    window.onload = function() {
+      const token = localStorage.getItem('adminToken');
+      const apiUrl = localStorage.getItem('apiUrl');
+      
+      if (token) document.getElementById('token').value = token;
+      if (apiUrl) document.getElementById('apiUrl').value = apiUrl;
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,550 @@
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
+import { LeaveBalance } from '../entities/leave-balance.entity';
+import { CreateLeaveBalanceDto } from '../dto/create-leave-balance.dto';
+import { UpdateLeaveBalanceDto } from '../dto/update-leave-balance.dto';
+import { Employee } from '../../employee/employee.entity';
+import { LeaveType } from '../entities/leave-type.entity';
+import { GlobalLeaveConfig } from '../entities/global-leave-config.entity';
+
+@Injectable()
+export class LeaveBalanceService {
+  private readonly logger = new Logger(LeaveBalanceService.name);
+  
+  constructor(
+    @InjectRepository(LeaveBalance)
+    private leaveBalanceRepository: Repository<LeaveBalance>,
+    @InjectRepository(Employee)
+    private employeeRepository: Repository<Employee>,
+    @InjectRepository(LeaveType)
+    private leaveTypeRepository: Repository<LeaveType>,
+    @InjectRepository(GlobalLeaveConfig)
+    private globalLeaveConfigRepository: Repository<GlobalLeaveConfig>,
+    private dataSource: DataSource,
+  ) {}
+
+  async create(createLeaveBalanceDto: CreateLeaveBalanceDto): Promise<LeaveBalance> {
+    // Check if leave balance already exists for this employee, leave type, and year
+    const existingBalance = await this.leaveBalanceRepository.findOne({
+      where: {
+        employee_id: createLeaveBalanceDto.employee_id,
+        leave_type_id: createLeaveBalanceDto.leave_type_id,
+        year: createLeaveBalanceDto.year,
+      },
+    });
+
+    if (existingBalance) {
+      throw new ConflictException(
+        `Leave balance already exists for this employee, leave type, and year`,
+      );
+    }
+
+    const leaveBalance = this.leaveBalanceRepository.create(createLeaveBalanceDto);
+    return this.leaveBalanceRepository.save(leaveBalance);
+  }
+
+  async findAll(): Promise<LeaveBalance[]> {
+    return this.leaveBalanceRepository.find({
+      relations: ['employee', 'leaveType'],
+    });
+  }
+
+  async findByEmployee(employeeId: string, year?: number): Promise<LeaveBalance[]> {
+    const queryBuilder = this.leaveBalanceRepository
+      .createQueryBuilder('leaveBalance')
+      .leftJoinAndSelect('leaveBalance.leaveType', 'leaveType')
+      .where('leaveBalance.employee_id = :employeeId', { employeeId });
+
+    if (year) {
+      queryBuilder.andWhere('leaveBalance.year = :year', { year });
+    } else {
+      // If no year specified, get current year
+      const currentYear = new Date().getFullYear();
+      queryBuilder.andWhere('leaveBalance.year = :year', { year: currentYear });
+    }
+
+    const leaveBalances = await queryBuilder.getMany();
+    
+    // Ensure remaining_days is calculated for each balance
+    leaveBalances.forEach(balance => {
+      // Calculate remaining days (this should be handled by @AfterLoad, but let's ensure it's set)
+      if (balance.remaining_days === undefined) {
+        balance.remaining_days = Number(balance.allocated_days) - Number(balance.used_days);
+      }
+      
+      // Add color information based on leave type
+      const colors = {
+        'Casual Leave': '#47BCCB',  // Teal
+        'Sick Leave': '#FF6B6B',    // Red
+        'Annual Leave': '#38B000',   // Green
+        'Unpaid Leave': '#9D4EDD',   // Purple
+        'Maternity Leave': '#FF85A1', // Pink
+        'Paternity Leave': '#4361EE', // Blue
+      };
+      
+      // Find a matching color or use default
+      let color = '#47BCCB'; // Default color
+      if (balance.leaveType) {
+        const typeName = balance.leaveType.name;
+        for (const [key, value] of Object.entries(colors)) {
+          if (typeName.toLowerCase().includes(key.toLowerCase())) {
+            color = value;
+            break;
+          }
+        }
+      }
+      
+      // Add color as a property to the balance object
+      (balance as any).color = color;
+    });
+    
+    return leaveBalances;
+  }
+  
+  /**
+   * Find an employee by their user ID
+   * @param userId The user ID to search for
+   * @returns The employee entity if found, null otherwise
+   */
+  async findEmployeeByUserId(userId: string): Promise<Employee | null> {
+    this.logger.log(`Finding employee with user ID: ${userId}`);
+    
+    try {
+      // First try exact match
+      const employee = await this.employeeRepository.findOne({
+        where: { userId: userId }
+      });
+      
+      if (employee) {
+        this.logger.log(`Found employee ${employee.id} for user ID ${userId}`);
+        return employee;
+      }
+      
+      // If no exact match, try case-insensitive match (depends on database type)
+      this.logger.log(`No exact match found, trying case-insensitive query for user ID: ${userId}`);
+      
+      // Use raw query for case-insensitive search (works in most databases)
+      const result = await this.employeeRepository.query(
+        `SELECT * FROM employees WHERE LOWER(user_id) = LOWER($1) LIMIT 1`,
+        [userId]
+      );
+      
+      if (result && result.length > 0) {
+        this.logger.log(`Found employee ${result[0].id} for user ID ${userId} with case-insensitive search`);
+        return result[0];
+      }
+      
+      this.logger.warn(`No employee found for user ID: ${userId}`);
+      return null;
+    } catch (error) {
+      this.logger.error(`Error finding employee by user ID ${userId}: ${error.message}`, error.stack);
+      return null;
+    }
+  }
+
+  async findOne(id: string): Promise<LeaveBalance> {
+    const leaveBalance = await this.leaveBalanceRepository.findOne({
+      where: { id },
+      relations: ['employee', 'leaveType'],
+    });
+
+    if (!leaveBalance) {
+      throw new NotFoundException(`Leave balance with ID ${id} not found`);
+    }
+
+    return leaveBalance;
+  }
+
+  async update(id: string, updateLeaveBalanceDto: UpdateLeaveBalanceDto): Promise<LeaveBalance> {
+    const leaveBalance = await this.findOne(id);
+
+    // Update the leave balance
+    Object.assign(leaveBalance, updateLeaveBalanceDto);
+    return this.leaveBalanceRepository.save(leaveBalance);
+  }
+
+  async remove(id: string): Promise<void> {
+    const leaveBalance = await this.findOne(id);
+    await this.leaveBalanceRepository.remove(leaveBalance);
+  }
+
+  async updateUsedDays(id: string, daysToAdd: number): Promise<LeaveBalance> {
+    const leaveBalance = await this.findOne(id);
+    leaveBalance.used_days = Number(leaveBalance.used_days) + daysToAdd;
+    
+    // Ensure used days doesn't exceed allocated days
+    if (leaveBalance.used_days > leaveBalance.allocated_days) {
+      throw new ConflictException('Used days cannot exceed allocated available days');
+    }
+    
+    return this.leaveBalanceRepository.save(leaveBalance);
+  }
+
+  // Method removed as pending_days is no longer in the database schema
+  
+  /**
+   * Populates leave balances for all employees based on global configuration
+   * @param year The year to populate leave balances for
+   * @returns Summary of the operation
+   */
+  async populateLeaveBalances(year: number): Promise<{ 
+    success: boolean; 
+    message: string; 
+    created: number; 
+    skipped: number; 
+    errors: number;
+  }> {
+    this.logger.log(`Starting leave balance population for year ${year}`);
+    
+    // Get all active employees
+    const employees = await this.employeeRepository.find();
+    
+    // Filter active employees if the field exists, otherwise use all employees
+    const activeEmployees = employees.filter(emp => emp['is_active'] !== false);
+    
+    if (!activeEmployees || activeEmployees.length === 0) {
+      this.logger.warn('No active employees found');
+      return {
+        success: false,
+        message: 'No active employees found',
+        created: 0,
+        skipped: 0,
+        errors: 0
+      };
+    }
+    
+    // Get all active leave types
+    const leaveTypes = await this.leaveTypeRepository.find({
+      where: { is_active: true }
+    });
+    
+    if (!leaveTypes || leaveTypes.length === 0) {
+      this.logger.warn('No active leave types found');
+      return {
+        success: false,
+        message: 'No active leave types found',
+        created: 0,
+        skipped: 0,
+        errors: 0
+      };
+    }
+    
+   
+    
+    let created = 0;
+    let skipped = 0;
+    let errors = 0;
+    
+    // Use a transaction to ensure data consistency
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    
+    try {
+      for (const employee of activeEmployees) {
+        for (const leaveType of leaveTypes) {
+          // Check if a leave balance already exists for this employee, leave type, and year
+          const existingBalance = await this.leaveBalanceRepository.findOne({
+            where: {
+              employee_id: employee.id,
+              leave_type_id: leaveType.id,
+              year: year
+            }
+          });
+          
+          if (existingBalance) {
+            this.logger.log(`Leave balance already exists for employee ${employee.id}, leave type ${leaveType.id}, year ${year}`);
+            skipped++;
+            continue;
+          }
+          
+          // Use the leave type's max_days value directly
+          const allocatedDays = leaveType.max_days;
+          
+          // Create a new leave balance
+          try {
+            const newBalance = this.leaveBalanceRepository.create({
+              employee_id: employee.id,
+              leave_type_id: leaveType.id,
+              year: year,
+              allocated_days: allocatedDays,
+              used_days: 0
+            });
+            
+            await this.leaveBalanceRepository.save(newBalance);
+            created++;
+            this.logger.log(`Created leave balance for employee ${employee.id}, leave type ${leaveType.name}, year ${year} with ${allocatedDays} days`);
+          } catch (error) {
+            this.logger.error(`Error creating leave balance: ${error.message}`, error.stack);
+            errors++;
+          }
+        }
+      }
+      
+      await queryRunner.commitTransaction();
+      
+      // Update the global leave config to reflect these allocations
+      await this.updateGlobalLeaveConfig(year, leaveTypes);
+      
+      return {
+        success: true,
+        message: `Leave balances populated for year ${year}`,
+        created,
+        skipped,
+        errors
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`Error populating leave balances: ${error.message}`, error.stack);
+      
+      return {
+        success: false,
+        message: `Error populating leave balances: ${error.message}`,
+        created,
+        skipped,
+        errors: errors + 1
+      };
+    } finally {
+      await queryRunner.release();
+    }
+  }
+  
+  /**
+   * Populates leave balances for a specific leave type for all active employees
+   * @param leaveTypeId The ID of the leave type to populate balances for
+   * @param year The year to populate leave balances for
+   * @returns Summary of the operation
+   */
+  async populateLeaveBalancesForType(leaveTypeId: string, year: number): Promise<{ 
+    success: boolean; 
+    message: string; 
+    created: number; 
+    skipped: number; 
+    errors: number;
+  }> {
+    this.logger.log(`Populating leave balances for leave type ${leaveTypeId} for year ${year}`);
+    
+    // Get all active employees
+    const employees = await this.employeeRepository.find();
+    
+    // Filter active employees if the field exists, otherwise use all employees
+    const activeEmployees = employees.filter(emp => emp['is_active'] !== false);
+    
+    if (!activeEmployees || activeEmployees.length === 0) {
+      this.logger.warn('No active employees found');
+      return {
+        success: false,
+        message: 'No active employees found',
+        created: 0,
+        skipped: 0,
+        errors: 0
+      };
+    }
+    
+    // Get the specific leave type
+    const leaveType = await this.leaveTypeRepository.findOne({
+      where: { id: leaveTypeId, is_active: true }
+    });
+    
+    if (!leaveType) {
+      return {
+        success: false,
+        message: 'Leave type not found or not active',
+        created: 0,
+        skipped: 0,
+        errors: 0
+      };
+    }
+    
+    // Define default allocations based on leave type names
+    const defaultAllocations = {
+      'Casual Leave': 6,
+      'Sick Leave': 6,
+      'Unpaid Leave': 30
+    };
+    
+    let created = 0;
+    let skipped = 0;
+    let errors = 0;
+    
+    // Use the leave type's max_days value directly
+    const allocatedDays = leaveType.max_days;
+    
+    // Use a transaction to ensure data consistency
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    
+    try {
+      // Create leave balances for all active employees
+      for (const employee of activeEmployees) {
+        // Check if a leave balance already exists
+        const existingBalance = await this.leaveBalanceRepository.findOne({
+          where: {
+            employee_id: employee.id,
+            leave_type_id: leaveTypeId,
+            year: year
+          }
+        });
+        
+        if (existingBalance) {
+          skipped++;
+          continue;
+        }
+        
+        // Create a new leave balance
+        try {
+          const newBalance = this.leaveBalanceRepository.create({
+            employee_id: employee.id,
+            leave_type_id: leaveTypeId,
+            year: year,
+            allocated_days: allocatedDays,
+            used_days: 0
+          });
+          
+          await this.leaveBalanceRepository.save(newBalance);
+          created++;
+          this.logger.log(`Created leave balance for employee ${employee.id}, leave type ${leaveType.name}, year ${year} with ${allocatedDays} days`);
+        } catch (error) {
+          this.logger.error(`Error creating leave balance: ${error.message}`, error.stack);
+          errors++;
+        }
+      }
+      
+      await queryRunner.commitTransaction();
+      
+      // Update the global leave config to include this leave type
+      await this.updateGlobalLeaveConfigForType(year, leaveType);
+      
+      return {
+        success: true,
+        message: `Leave balances populated for leave type ${leaveType.name} for year ${year}`,
+        created,
+        skipped,
+        errors
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`Error populating leave balances: ${error.message}`, error.stack);
+      
+      return {
+        success: false,
+        message: `Error populating leave balances: ${error.message}`,
+        created,
+        skipped,
+        errors: errors + 1
+      };
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Updates the global leave config for a specific leave type
+   * @param year The year to update the config for
+   * @param leaveType The leave type to update the config for
+   */
+  private async updateGlobalLeaveConfigForType(year: number, leaveType: LeaveType): Promise<void> {
+    const configKey = `leave_config_${year}`;
+    
+    // Use the leave type's max_days value directly
+    const allocatedDays = leaveType.max_days;
+    
+    try {
+      // Check if config exists
+      const existingConfig = await this.globalLeaveConfigRepository.findOne({
+        where: { key: configKey }
+      });
+      
+      if (existingConfig) {
+        // Update existing config
+        const currentValue = existingConfig.value as any;
+        
+        // Check if this leave type already exists in the allocations
+        const allocations = currentValue.allocations || [];
+        const existingIndex = allocations.findIndex(a => a.leave_type_id === leaveType.id);
+        
+        if (existingIndex >= 0) {
+          // Update existing allocation
+          allocations[existingIndex].max_days = allocatedDays;
+        } else {
+          // Add new allocation
+          allocations.push({
+            leave_type_id: leaveType.id,
+            leave_type_name: leaveType.name,
+            max_days: allocatedDays
+          });
+        }
+        
+        existingConfig.value = {
+          ...currentValue,
+          allocations
+        };
+        
+        await this.globalLeaveConfigRepository.save(existingConfig);
+      } else {
+        // Create new config
+        const newConfig = this.globalLeaveConfigRepository.create({
+          key: configKey,
+          value: {
+            year,
+            allocations: [{
+              leave_type_id: leaveType.id,
+              leave_type_name: leaveType.name,
+              max_days: allocatedDays
+            }]
+          },
+          description: `Leave configuration for year ${year}`
+        });
+        
+        await this.globalLeaveConfigRepository.save(newConfig);
+      }
+    } catch (error) {
+      this.logger.error(`Error updating global leave config: ${error.message}`, error.stack);
+    }
+  }
+
+  private async updateGlobalLeaveConfig(year: number, leaveTypes: LeaveType[]): Promise<void> {
+    const configKey = `leave_config_${year}`;
+    
+    // Create allocations array for the config using leave type max_days directly
+    const allocations = leaveTypes.map(leaveType => {
+      const maxDays = leaveType.max_days;
+      
+      return {
+        leave_type_id: leaveType.id,
+        leave_type_name: leaveType.name,
+        max_days: maxDays
+      };
+    });
+    
+    const configValue = {
+      year,
+      allocations
+    };
+    
+    try {
+      // Check if config exists
+      const existingConfig = await this.globalLeaveConfigRepository.findOne({
+        where: { key: configKey }
+      });
+      
+      if (existingConfig) {
+        // Update existing config
+        existingConfig.value = configValue;
+        await this.globalLeaveConfigRepository.save(existingConfig);
+      } else {
+        // Create new config
+        const newConfig = this.globalLeaveConfigRepository.create({
+          key: configKey,
+          value: configValue,
+          description: `Leave configuration for year ${year}`
+        });
+        await this.globalLeaveConfigRepository.save(newConfig);
+      }
+    } catch (error) {
+      this.logger.error(`Error updating global leave config: ${error.message}`, error.stack);
+    }
+  }
+}

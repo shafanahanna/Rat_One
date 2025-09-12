@@ -1,0 +1,324 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUnassignedUsers } from '../../redux/slices/usersSlice';
+
+import axios from 'axios';
+
+const designationOptions = [
+    "Digital Marketing Executive",
+    "Travel Consultant",
+    "HR Manager",
+    "Accountant",
+    "Branch Assistant",
+    "Branch Associate",
+    "Ticketing & Reservation"
+];
+
+const departmentOptions = [
+    "Holidays",
+    "Reservation",
+    "Finance",
+    "Marketing",
+    "Human Resources",
+    "Administration"
+];
+
+const AddEmployee = () => {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { unassignedUsers, unassignedUsersLoading, unassignedUsersError } = useSelector(state => state.users);
+    const [formData, setFormData] = useState({
+        user_id: '',
+        full_name: '',
+        designation: '',
+        department: '',
+        salary: '',
+        date_of_joining: '',
+        emp_code: ''
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        console.log('Dispatching fetchUnassignedUsers action');
+        dispatch(fetchUnassignedUsers())
+            .unwrap()
+            .then(result => {
+                console.log('Unassigned users fetched successfully:', result);
+            })
+            .catch(error => {
+                console.error('Error fetching unassigned users:', error);
+            });
+    }, [dispatch]);
+
+    useEffect(() => {
+        console.log('Current unassignedUsers state:', unassignedUsers);
+    }, [unassignedUsers]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        if (name === "user_id") {
+          const selectedUser = unassignedUsers.find(
+            (user) => user.id.toString() === value
+          );
+          setFormData((prev) => ({
+            ...prev,
+            user_id: value,
+            full_name: selectedUser ? selectedUser.name : "",
+          }));
+        } else {
+          setFormData((prev) => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const { user_id, full_name, designation, department, date_of_joining, emp_code, salary } = formData;
+        if (!user_id || !full_name || !designation || !department || !date_of_joining) {
+            setError('Please fill in all required fields');
+            return;
+        }
+        
+        // Generate an employee code if not provided
+        if (!emp_code) {
+            // Create a code based on department and a random number
+            const deptPrefix = department.substring(0, 3).toUpperCase();
+            const randomNum = Math.floor(1000 + Math.random() * 9000); 
+            formData.emp_code = `${deptPrefix}-${randomNum}`;
+        }
+        
+        // Handle salary validation and date formatting
+        const dataToSubmit = {...formData};
+        
+        // Format date_of_joining as ISO string for backend validation
+        if (dataToSubmit.date_of_joining) {
+            // Ensure it's a valid date object
+            const dateObj = new Date(dataToSubmit.date_of_joining);
+            if (!isNaN(dateObj.getTime())) {
+                dataToSubmit.date_of_joining = dateObj.toISOString();
+            } else {
+                setError('Invalid joining date format');
+                return;
+            }
+        }
+        
+        // Add branch_id from authenticated user or selected user
+        const branchId = localStorage.getItem('branchId');
+        
+        // If we don't have branch_id in localStorage, try to get it from the selected user
+        const selectedUser = unassignedUsers?.find(user => user.id === user_id);
+        
+        if (branchId) {
+            dataToSubmit.branch_id = branchId;
+        } else if (selectedUser?.branch_id) {
+            dataToSubmit.branch_id = selectedUser.branch_id;
+        }
+        
+        // Handle salary validation
+        if (salary === '' || salary === null || salary === undefined || salary === '0') {
+            // If salary is empty or zero, remove it from the request completely
+            delete dataToSubmit.salary;
+        } else {
+            // Ensure salary is a positive number
+            const salaryNum = Number(salary);
+            if (isNaN(salaryNum) || salaryNum <= 0) {
+                setError('Salary must be a positive number');
+                return;
+            }
+            // Convert to number explicitly
+            dataToSubmit.salary = salaryNum;
+        }
+
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem('Admintoken');
+            console.log('Employee creation payload:', dataToSubmit);
+            console.log('API URL:', `${import.meta.env.VITE_API_URL}/api/employees`);
+            const response = await axios.post(
+                `${import.meta.env.VITE_API_URL}/api/employees`, 
+                dataToSubmit,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            console.log('Employee creation response:', response.data);
+            if (response.data.status === "Success") {
+                navigate('/hr/employees');
+            } else {
+                setError(response.data.message || 'Failed to create employee');
+            }
+        } catch (error) {
+            console.error('Employee creation error:', error);
+            console.error('Error response data:', error.response?.data);
+            setError(error.response?.data?.message || 'An error occurred while creating employee');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+            <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 text-center">
+                    Add New Employee
+                </h1>
+                
+                {error && (
+                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                        {error}
+                    </div>
+                )}
+                
+                {unassignedUsersError && (
+                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                        Failed to load unassigned users: {unassignedUsersError}
+                    </div>
+                )}
+                
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Select User <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            name="user_id"
+                            value={formData.user_id}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            required
+                            disabled={unassignedUsersLoading}
+                        >
+                            <option value="">-- Select a user --</option>
+                            {unassignedUsersLoading ? (
+                                <option disabled>Loading users...</option>
+                            ) : unassignedUsers.length > 0 ? (
+                                unassignedUsers.map(user => (
+                                    <option key={user.id} value={user.id}>
+                                        {user.name} ({user.email}){user.branch_name ? ` - ${user.branch_name}` : ''}
+                                    </option>
+                                ))
+                            ) : (
+                                <option disabled>No unassigned users available</option>
+                            )}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="full_name"
+                            value={formData.full_name}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Designation <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            name="designation"
+                            value={formData.designation}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            required
+                        >
+                            <option value="">-- Select Designation --</option>
+                            {designationOptions.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Department <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            name="department"
+                            value={formData.department}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            required
+                        >
+                            <option value="">-- Select Department --</option>
+                            {departmentOptions.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Joining Date <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="date"
+                            name="date_of_joining"
+                            value={formData.date_of_joining}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Employee ID
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                name="emp_code"
+                                value={formData.emp_code}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                placeholder="e.g., HR-1234 (Auto-generated if left empty)"
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs text-gray-500">
+                                Optional
+                            </div>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">Leave blank for auto-generated ID based on department</p>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Salary (Optional)
+                        </label>
+                        <input
+                            type="number"
+                            name="salary"
+                            value={formData.salary}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            placeholder="e.g., 50000"
+                        />
+                    </div>
+                    <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/hr/employees')}
+                            className="w-full sm:w-auto px-6 py-2.5 bg-gray-200 text-gray-800 text-sm font-medium rounded-lg hover:bg-gray-300 transition duration-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading || unassignedUsersLoading || unassignedUsers.length === 0}
+                            className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition duration-200"
+                        >
+                            {loading ? 'Saving...' : 'Create Employee Profile'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default AddEmployee;
