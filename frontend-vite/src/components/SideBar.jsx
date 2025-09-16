@@ -168,19 +168,19 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
     return (
       <div 
         onClick={() => toggleSection(section)}
-        className={`flex items-center justify-between px-3 py-2 mt-2 mb-1 cursor-pointer rounded-lg
-          ${isOpen ? 'hover:bg-gray-800/30' : ''} transition-colors`}
+        className={`flex items-center justify-between px-3 py-2 mt-2 mb-1 cursor-pointer
+          ${isOpen ? 'hover:bg-[#F1F3F4]' : ''} transition-colors rounded-full`}
       >
         <div className="flex items-center gap-3">
-          {Icon && <Icon size={18} className="text-gray-400" />}
+          {Icon && <Icon size={18} className="text-[#5F6368]" />}
           {isOpen && (
-            <span className="text-sm font-semibold text-gray-400">{title}</span>
+            <span className="text-sm font-medium text-[#5F6368]">{title}</span>
           )}
         </div>
         {isOpen && (
           expandedSections[section] ? 
-            <ChevronDown size={16} className="text-gray-400" /> : 
-            <ChevronRight size={16} className="text-gray-400" />
+            <ChevronDown size={16} className="text-[#5F6368]" /> : 
+            <ChevronRight size={16} className="text-[#5F6368]" />
         )}
       </div>
     );
@@ -197,12 +197,12 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
       <div
         className={`${
           mobileIsOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:sticky top-0 left-0 min-h-screen max-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex-col ${
+        } lg:translate-x-0 fixed lg:sticky top-0 left-0 min-h-screen max-h-screen bg-white shadow-md flex-col ${
           isOpen ? "min-w-64 w-64" : "w-16"
         } transition-all duration-300 shadow-xl z-50 flex`}
       >
         {/* Header */}
-        <div className=" relative h-16 flex items-center justify-center px-4 border-b border-gray-700/50">
+        <div className=" relative h-16 flex items-center justify-center px-4 border-b border-[#DADCE0]">
           {isOpen && (
             <div className="flex items-center space-x-2">
               {/* <div className="w-8 h-8 rounded-lg flex items-center justify-center px-12"> */}
@@ -216,7 +216,7 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
           )}
           <button
             onClick={handleToggle}
-            className=" absolute right-4 top-1/2 -translate-y-1/2  w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full transition-colors"
           >
             <i className={`fas ${isOpen ? "fa-chevron-left" : "fa-bars"}`}></i>
           </button>
@@ -224,10 +224,10 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
 
         {/* Role Badge - only for HR and DM */}
         {isOpen && userRole && userRole !== "Director" && (
-          <div className="px-4 py-2 border-b border-gray-700/50">
-            <div className="bg-[#47BCCB]/20 rounded-md px-3 py-2 flex items-center justify-center">
-              <span className="text-[#47BCCB] font-medium text-sm">
-                Logged in as: <span className="font-bold">{userRole}</span>
+          <div className="px-4 py-2 border-b border-[#DADCE0]">
+            <div className="bg-[#E8F0FE] rounded-full px-3 py-2 flex items-center justify-center">
+              <span className="text-[#1A73E8] font-medium text-sm">
+                Logged in as: <span className="font-bold text-[#202124]">{userRole}</span>
               </span>
             </div>
           </div>
@@ -254,8 +254,8 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                   isActive
-                    ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                    : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                    ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                    : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
                 }`
               }
             >
@@ -273,8 +273,8 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                   isActive
-                    ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                    : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                    ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                    : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
                 }`
               }
             >
@@ -300,8 +300,8 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -315,8 +315,8 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -330,8 +330,8 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -345,8 +345,8 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -360,8 +360,8 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -375,8 +375,8 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -402,8 +402,8 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                   isActive
-                    ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                    : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                    ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                    : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
                 }`
               }
             >
@@ -417,14 +417,14 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
         </nav>
 
         {/* Footer */}
-        <div className="p-2 border-t border-gray-700/50 space-y-1">
+        <div className="p-2 border-t border-[#DADCE0] space-y-1">
         <NavLink
             to="/profile"
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB]"
-                  : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                  ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                  : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
               }`
             }
           >
@@ -442,7 +442,7 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
                   {employeeData?.fullName || currentUser?.name || 'My Profile'}
                 </span>
                 {employeeData && (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-[#80868B]">
                     {employeeData.designation || employeeData.role || currentUser?.role}
                   </span>
                 )}
@@ -451,7 +451,7 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
           </NavLink>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-gray-800/50 hover:text-white transition-all duration-200"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full transition-all duration-200"
           >
             <i className="fas fa-sign-out-alt text-lg"></i>
             {isOpen && <span>Logout</span>}
