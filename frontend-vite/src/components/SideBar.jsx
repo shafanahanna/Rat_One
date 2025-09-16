@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import Logo from "../Images/Hayal_Logo.png";
+import Logo from "../Images/Ratone.png";
 import axios from "axios";
 import { 
   Plane, 
@@ -205,13 +205,13 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
         <div className=" relative h-16 flex items-center justify-center px-4 border-b border-gray-700/50">
           {isOpen && (
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center px-12">
+              {/* <div className="w-8 h-8 rounded-lg flex items-center justify-center px-12"> */}
                   <img
                     src={Logo}
                     alt="Best international travel agency in Kerala"
-                    className="max-w-[160px] h-5 "
+                    className="h-[30px] w-auto object-contain  "
                   />
-              </div>
+              {/* </div> */}
             </div>
           )}
           <button
@@ -264,84 +264,7 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
             </NavLink>
           )}
 
-          {/* Lead Management Section */}
-          {hasPermission("leads") && (
-            <>
-              <SectionHeader
-                title="Lead Management"
-                section="leads"
-                icon={MessageSquare}
-              />
-
-              {expandedSections.leads && (
-                <div className="space-y-1 pl-2">
-                  {/* Leads */}
-                  <NavLink
-                    to="/leads"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                        isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                      }`
-                    }
-                  >
-                    <i className="fas fa-comment-alt text-lg"></i>
-                    {isOpen && <span>Leads</span>}
-                  </NavLink>
-
-                  {/* Quotes - Visible to users with quotes permission */}
-                  {hasPermission("quotes") && (
-                    <NavLink
-                      to="/admin/quotes"
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                          isActive
-                            ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                            : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                        }`
-                      }
-                    >
-                      <FileText size={18} />
-                      {isOpen && <span>Quotes</span>}
-                    </NavLink>
-                  )}
-
-                  {/* Lead Analytics */}
-                  <NavLink
-                    to="/lead-analytics"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                        isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                      }`
-                    }
-                  >
-                    <BarChart size={18} />
-                    {isOpen && <span>Lead Analytics</span>}
-                  </NavLink>
-                  
-                  {/* Marketing Campaigns - moved under Lead Management */}
-                  {(userRole === "Director" || userRole === "DM" || userRole === "Marketing") && (
-                    <NavLink
-                      to="/admin/marketing/campaigns"
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                          isActive
-                            ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                            : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                        }`
-                      }
-                    >
-                      <TrendingUp size={18} />
-                      {isOpen && <span>Campaigns</span>}
-                    </NavLink>
-                  )}
-                </div>
-              )}
-            </>
-          )}
+          
 
           {/* User Management - Single Link */}
           {(userRole === "Director" || hasPermission("users")) && (
@@ -468,95 +391,7 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
 
 
 
-            {/* Holiday Management - Only visible to BA and Director */}
-            {(userRole === "BA" || userRole === "Director") && (
-            <>
-              <SectionHeader
-                title="Holiday Management"
-                section="holidayManagement"
-                icon={Plane}
-              />
-
-              {expandedSections.holidayManagement && (
-                <div className="space-y-1 pl-2">
-                  {/* Holiday Dashboard */}
-                  <NavLink
-                    to="/holiday"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                        isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                      }`
-                    }
-                  >
-                    <i className="fas fa-tachometer-alt text-lg"></i>
-                    {isOpen && <span>Dashboard</span>}
-                  </NavLink>
-
-                  {/* Destinations */}
-                  <NavLink
-                    to="/holiday/destinations"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                        isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                      }`
-                    }
-                  >
-                    <Map size={18} />
-                    {isOpen && <span>Destinations</span>}
-                  </NavLink>
-
-                  {/* DMCs */}
-                  <NavLink
-                    to="/holiday/dmcs"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                        isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                      }`
-                    }
-                  >
-                    <Building size={18} />
-                    {isOpen && <span>DMCs</span>}
-                  </NavLink>
-
-                  {/* Itineraries */}
-                  <NavLink
-                    to="/holiday/itineraries"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                        isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                      }`
-                    }
-                  >
-                    <Route size={18} />
-                    {isOpen && <span>Itineraries</span>}
-                  </NavLink>
-                  {/* Trip Management */}
-                  <NavLink
-                    to="/trip-management"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                        isActive
-                          ? "bg-gradient-to-r from-[#47BCCB]/20 to-transparent text-[#47BCCB] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-[#47BCCB] before:rounded-r-md"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                      }`
-                    }
-                  >
-                    <PlaneTakeoff size={18} />
-                    {isOpen && <span>Trip Management</span>}
-                  </NavLink>
-                </div>
-              )}
-            </>
-          )}
-
+           
 
 
 
