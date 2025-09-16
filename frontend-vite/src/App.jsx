@@ -5,6 +5,7 @@ import Dashboard from './pages/dashboard/Dashboard';
 import UsersList from './pages/users/UsersList';
 import AddUser from './pages/users/AddUser';
 import RolesPermissions from './pages/users/RolesPermissions';
+import CustomRoles from './pages/users/CustomRoles';
 import DirectorSettings from './pages/settings/DirectorSettings';
 import Layout from './components/Layout';
 import './App.css';
@@ -112,6 +113,15 @@ function App() {
             element={
               <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC',"DM"]}>
                 <RolesPermissions />
+              </RoleProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/users/custom-roles" 
+            element={
+              <RoleProtectedRoute allowedRoles={['Director']}>
+                <CustomRoles />
               </RoleProtectedRoute>
             } 
           />

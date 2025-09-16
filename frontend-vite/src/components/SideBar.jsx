@@ -58,13 +58,27 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
     
     // Role-based permissions mapping
     const rolePermissions = {
-      Director: ['dashboard', 'leads', 'quotes', 'users', 'settings', 'hr', 'employees', 'attendance', 'payroll'],
+      Director: ['dashboard', 'leads', 'quotes', 'users', 'settings', 'hr', 'employees', 'attendance', 'payroll', 'custom_roles'],
       DM: ['dashboard', 'leads', 'marketing', 'hr', 'employees', 'attendance', 'payroll'],
       HR: ['hr', 'employees', 'attendance', 'payroll'],
       BA: ['dashboard', 'leads', 'quotes', 'holiday'],
       Marketing: ['dashboard', 'leads', 'campaigns'],
       TC: ['dashboard', 'leads', 'quotes', 'hr', 'employees', 'attendance', 'payroll']
     };
+    
+    // Check for custom roles in localStorage
+    try {
+      const customRolesStr = localStorage.getItem('customRoles');
+      if (customRolesStr) {
+        const customRoles = JSON.parse(customRolesStr);
+        // Add custom roles to the permissions mapping
+        Object.keys(customRoles).forEach(roleName => {
+          rolePermissions[roleName] = customRoles[roleName];
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing custom roles:', error);
+    }
     
     // Get permissions for the user's role
     const userPermissions = rolePermissions[userRole] || [];
@@ -266,21 +280,51 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
 
           
 
-          {/* User Management - Single Link */}
+          {/* User Management Section */}
           {(userRole === "Director" || hasPermission("users")) && (
-            <NavLink
-              to="/users"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                  isActive
-                    ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                    : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
-                }`
-              }
-            >
-              <Users size={18} />
-              {isOpen && <span>User Management</span>}
-            </NavLink>
+            <>
+              <SectionHeader
+                title="User Management"
+                section="userManagement"
+                icon={Users}
+              />
+
+              {expandedSections.userManagement && (
+                <div className="space-y-1 pl-2">
+                  {/* User List */}
+                  <NavLink
+                    to="/users"
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
+                        isActive
+                          ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                      }`
+                    }
+                  >
+                    <Users size={18} />
+                    {isOpen && <span>User List</span>}
+                  </NavLink>
+                  
+                  {/* Custom Roles */}
+                  {(userRole === "Director" || hasPermission("custom_roles")) && (
+                    <NavLink
+                      to="/users/custom-roles"
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
+                          isActive
+                            ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
+                            : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                        }`
+                      }
+                    >
+                      <Shield size={18} />
+                      {isOpen && <span>Custom Roles</span>}
+                    </NavLink>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {/* HR Management Section */}

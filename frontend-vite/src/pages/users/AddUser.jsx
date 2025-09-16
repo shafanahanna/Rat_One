@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import userService from '../../services/userService';
+import roleService from '../../services/roleService';
 
 
 const AddUser = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [customRoles, setCustomRoles] = useState([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -19,6 +22,23 @@ const AddUser = () => {
 
   // Form validation
   const [formErrors, setFormErrors] = useState({});
+
+  // Fetch custom roles when component mounts
+  useEffect(() => {
+    const fetchCustomRoles = async () => {
+      setLoadingRoles(true);
+      try {
+        const roles = await roleService.getAllRoles();
+        setCustomRoles(roles);
+      } catch (error) {
+        console.error('Error fetching custom roles:', error);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+    
+    fetchCustomRoles();
+  }, []);
 
   const onClose = () => {
     navigate('/users');
@@ -247,14 +267,31 @@ const AddUser = () => {
               } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
             >
               <option value="">Select a role</option>
-              <option value="Director">Director</option>
-              <option value="HR">HR</option>
-              <option value="DM">DM</option>
-              <option value="TC">TC</option>
-              <option value="BA">BA - Branch Administration</option>
-              <option value="RT">RT - Reservation and Ticketing</option>
-              <option value="AC">AC - Accounts</option>
+              <optgroup label="System Roles">
+                <option value="Director">Director</option>
+                <option value="HR">HR</option>
+                <option value="DM">DM</option>
+                <option value="TC">TC</option>
+                <option value="BA">BA - Branch Administration</option>
+                <option value="RT">RT - Reservation and Ticketing</option>
+                <option value="AC">AC - Accounts</option>
+              </optgroup>
+              
+              {customRoles.length > 0 && (
+                <optgroup label="Custom Roles">
+                  {customRoles.map(role => (
+                    <option key={role.id} value={role.name}>
+                      {role.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
+            {loadingRoles && (
+              <p className="text-blue-500 text-xs mt-1">
+                Loading custom roles...
+              </p>
+            )}
             {formErrors.role && (
               <p className="text-red-500 text-xs italic mt-1">
                 {formErrors.role}

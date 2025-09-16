@@ -34,6 +34,7 @@ import {
 } from '@mui/material';
 import { Search, Edit, Delete, UserPlus, RefreshCw, Save } from 'lucide-react';
 import userService from '../../services/userService';
+import roleService from '../../services/roleService';
 import { useNavigate } from 'react-router-dom';
 
 const UsersList = () => {
@@ -45,6 +46,8 @@ const UsersList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [customRoles, setCustomRoles] = useState([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
   
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -74,7 +77,20 @@ const UsersList = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchCustomRoles();
   }, []);
+  
+  const fetchCustomRoles = async () => {
+    setLoadingRoles(true);
+    try {
+      const roles = await roleService.getAllRoles();
+      setCustomRoles(roles);
+    } catch (error) {
+      console.error('Error fetching custom roles:', error);
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
 
   useEffect(() => {
     if (users.length > 0) {
@@ -374,9 +390,11 @@ const UsersList = () => {
                               color={
                                 user.role === 'Director' ? 'primary' : 
                                 user.role === 'HR' ? 'secondary' : 
+                                customRoles.some(role => role.name === user.role) ? 'success' :
                                 'default'
                               }
-                              variant={user.role === 'DM' || user.role === 'TC' || user.role === 'BA' || user.role === 'RT' || user.role === 'AC' ? 'outlined' : 'filled'}
+                              variant={user.role === 'DM' || user.role === 'TC' || user.role === 'BA' || user.role === 'RT' || user.role === 'AC' ? 'outlined' : 
+                                      customRoles.some(role => role.name === user.role) ? 'outlined' : 'filled'}
                             />
                           </TableCell>
                           
@@ -590,14 +608,31 @@ const UsersList = () => {
                   } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
                 >
                   <option value="">Select a role</option>
-                  <option value="Director">Director</option>
-                  <option value="HR">HR</option>
-                  <option value="DM">DM</option>
-                  <option value="TC">TC</option>
-                  <option value="BA">BA - Branch Administration</option>
-                  <option value="RT">RT - Reservation and Ticketing</option>
-                  <option value="AC">AC - Accounts</option>
+                  <optgroup label="System Roles">
+                    <option value="Director">Director</option>
+                    <option value="HR">HR</option>
+                    <option value="DM">DM</option>
+                    <option value="TC">TC</option>
+                    <option value="BA">BA - Branch Administration</option>
+                    <option value="RT">RT - Reservation and Ticketing</option>
+                    <option value="AC">AC - Accounts</option>
+                  </optgroup>
+                  
+                  {customRoles.length > 0 && (
+                    <optgroup label="Custom Roles">
+                      {customRoles.map(role => (
+                        <option key={role.id} value={role.name}>
+                          {role.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
+                {loadingRoles && (
+                  <p className="text-blue-500 text-xs mt-1">
+                    Loading custom roles...
+                  </p>
+                )}
                 {formErrors.role && (
                   <p className="text-red-500 text-xs italic mt-1">
                     {formErrors.role}

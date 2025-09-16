@@ -10,6 +10,7 @@ import { User } from './entities/user.entity';
 import { UsersController } from './users/users.controller';
 import { UsersService } from './users/users.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         signOptions: { expiresIn: '24h' },
       }),
     }),
+    RolesModule,
   ],
   controllers: [AuthController, UsersController],
   providers: [AuthService, DatabaseService, UsersService, JwtStrategy],
