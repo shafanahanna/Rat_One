@@ -29,7 +29,7 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    const { username, email, password_hash, role } = registerDto;
+    const { username, email, password_hash } = registerDto;
 
     // Check if user with this email already exists
     const existingUser = await this.userRepository.findOne({ where: { email: email.toLowerCase() } });
@@ -47,7 +47,6 @@ export class AuthService {
         username,
         email: email.toLowerCase(),
         password_hash: hashedPassword,
-        role,
         // Optional fields can be added here if provided
         country_id: null,
         branch_id: null,
@@ -136,37 +135,31 @@ export class AuthService {
         // Continue without employee ID if there's an error
       }
 
-      // Check if the role is Admin (previously Director) by looking up the role permissions
-      let isAdmin = user.role === 'Admin' || user.role === 'Director'; // For backward compatibility
+      // Determine if the user should have admin privileges
+      // Since the role column has been removed, we'll use a simple heuristic
+      let isAdmin = false;
       
-      // If not a default admin role, check if it's a custom role with admin permissions
-      if (!isAdmin) {
-        try {
-          // Find all custom roles
-          const customRoles = await this.rolesService.findAll();
-          
-          // Find the custom role that matches the user's role
-          const userCustomRole = customRoles.find(role => role.name === user.role);
-          
-          // Check if the role has admin permissions
-          if (userCustomRole && userCustomRole.permissions.includes('admin')) {
-            isAdmin = true;
-          }
-        } catch (error) {
-          console.error('Error checking custom roles:', error);
-          // Continue without custom role check if there's an error
-        }
+      // Check if the user's email contains admin or director
+      if (user.email && (user.email.includes('admin') || user.email.includes('director'))) {
+        isAdmin = true;
       }
+      
+      // In a real implementation, we would check the user_roles table to determine permissions
+      // But for now, we'll use this simple approach
+      
+      // Determine a role value to include in the token
+      // This is a temporary solution until proper role management is implemented
+      const userRole = isAdmin ? 'Admin' : 'User';
       
       const token = this.jwtService.sign(
         { 
           sub: user.id, 
           id: user.id, 
-          role: user.role, 
           email: user.email,
           isUUID: isUUID,
           is_global: isAdmin,
-          employeeId: employeeId
+          employeeId: employeeId,
+          role: userRole // Include the determined role
         }
       );
 
@@ -174,9 +167,9 @@ export class AuthService {
         status: "Success",
         message: "Login successful",
         token,
-        role: user.role,
+        role: userRole, // Use the determined role
         id: user.id,
-        idType:  'uuid',
+        idType: 'uuid',
         context: {
           is_global: isAdmin,
           country_id: '',

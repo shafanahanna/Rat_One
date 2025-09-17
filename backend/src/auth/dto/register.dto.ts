@@ -13,7 +13,6 @@ export class RegisterDto {
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
   password_hash: string;
 
-  @IsString()
-  @IsNotEmpty({ message: 'Role is required' })
-  role: string;
+  // Role is now managed through the user_roles table
+  // and assigned after user creation
 }
