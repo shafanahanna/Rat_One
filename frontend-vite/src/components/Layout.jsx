@@ -1,8 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SideBar from './SideBar';
 
 const Layout = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(window.innerWidth >= 1024);
+  
+  // Track sidebar expanded state for desktop
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const sidebarState = localStorage.getItem('sidebarExpanded');
+      if (sidebarState !== null) {
+        setSidebarExpanded(sidebarState === 'true');
+      }
+    };
+    
+    // Set initial state
+    handleStorageChange();
+    
+    // Listen for changes
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('sidebarStateChange', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('sidebarStateChange', handleStorageChange);
+    };
+  }, []);
   
   const toggleMobileSidebar = () => {
     setMobileOpen(!mobileOpen);
@@ -11,10 +34,10 @@ const Layout = ({ children }) => {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <SideBar isOpen={mobileOpen} />
+      <SideBar isOpen={mobileOpen} onToggle={(expanded) => setSidebarExpanded(expanded)} />
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden ml-0 lg:ml-16 transition-all duration-300">
+      <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300">
         {/* Mobile Header */}
         <header className="bg-white shadow-sm lg:hidden">
           <div className="px-4 py-3 flex items-center justify-between">

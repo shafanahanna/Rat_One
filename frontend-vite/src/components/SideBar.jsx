@@ -44,7 +44,7 @@ const hideScrollbarStyleWebkit = {
   }
 };
 
-const SideBar = ({ isOpen: mobileIsOpen }) => {
+const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
   // Replace useAuth hook with direct localStorage access
   const currentUser = {
     id: localStorage.getItem('userId'),
@@ -108,24 +108,52 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
 
   // For desktop toggle
   const handleToggle = () => {
-    setIsOpen(!isOpen);
+    const newState = !isOpen;
+    setIsOpen(newState);
+    
+    // Store in localStorage for persistence
+    localStorage.setItem('sidebarExpanded', newState);
+    
+    // Notify parent component
+    if (onToggle) {
+      onToggle(newState);
+    }
+    
+    // Dispatch custom event for other components
+    window.dispatchEvent(new CustomEvent('sidebarStateChange'));
   };
 
 
   const API_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsOpen(true);
-      } else {
-        setIsOpen(false);
+      const newState = window.innerWidth >= 1024;
+      setIsOpen(newState);
+      
+      // Store in localStorage
+      localStorage.setItem('sidebarExpanded', newState);
+      
+      // Notify parent component
+      if (onToggle) {
+        onToggle(newState);
       }
     };
 
-    handleResize();
+    // Check for existing preference in localStorage
+    const storedState = localStorage.getItem('sidebarExpanded');
+    if (storedState !== null && window.innerWidth >= 1024) {
+      const parsedState = storedState === 'true';
+      setIsOpen(parsedState);
+      if (onToggle) {
+        onToggle(parsedState);
+      }
+    } else {
+      handleResize();
+    }
+    
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [onToggle]);
   
   // Fetch employee data for the current user
   // useEffect(() => {
