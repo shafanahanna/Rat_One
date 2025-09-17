@@ -24,9 +24,28 @@ import {
   DialogContentText,
   DialogActions,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  Card,
+  CardContent,
+  Tooltip,
+  Divider,
+  Menu,
+  MenuItem,
+  Fade,
+  Avatar
 } from '@mui/material';
-import { Search, Edit, Delete, Plus, RefreshCw, Save, Shield } from 'lucide-react';
+import { 
+  Search, 
+  Edit, 
+  Delete, 
+  Plus, 
+  RefreshCw, 
+  Save, 
+  Shield, 
+  MoreVertical, 
+  Info,
+  CheckCircle
+} from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -60,6 +79,8 @@ const Designations = () => {
   });
   const [formSuccess, setFormSuccess] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [selectedRoleId, setSelectedRoleId] = useState(null);
 
   // Available permissions - updated for HRM system only
   const availablePermissions = [
@@ -321,65 +342,176 @@ const Designations = () => {
     setRoleModalOpen(false);
   };
 
+  const handleMenuOpen = (event, roleId) => {
+    setMenuAnchorEl(event.currentTarget);
+    setSelectedRoleId(roleId);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setSelectedRoleId(null);
+  };
+
+  const handleMenuEdit = () => {
+    handleEditRole(selectedRoleId);
+    handleMenuClose();
+  };
+
+  const handleMenuDelete = () => {
+    const roleToDelete = roles.find(role => role.id === selectedRoleId);
+    if (roleToDelete) {
+      setRoleToDelete(roleToDelete);
+      setDeleteDialogOpen(true);
+    }
+    handleMenuClose();
+  };
+
   return (
-    <Container maxWidth="xl" className="py-6">
-      <Box className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <Typography variant="h5" component="h1" className="font-bold text-gray-800">
-          Designation Management
-        </Typography>
-        <Box className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <TextField
-            placeholder="Search designations..."
-            variant="outlined"
-            size="small"
-            fullWidth
-            className="sm:w-64"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search size={20} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Plus size={18} />}
-            onClick={handleAddRole}
-            className="whitespace-nowrap"
-          >
-            Create Designation
-          </Button>
-          <IconButton onClick={fetchRoles} color="default" className="ml-1">
-            <RefreshCw size={20} />
-          </IconButton>
-        </Box>
-      </Box>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Card elevation={0} sx={{ mb: 3, borderRadius: '16px', overflow: 'visible' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, mb: 2 }}>
+            <Typography 
+              variant="h5" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 500, 
+                color: '#202124',
+                fontSize: '1.5rem',
+                mb: { xs: 2, md: 0 }
+              }}
+            >
+              Designation Management
+            </Typography>
+            
+            <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', md: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
+              <TextField
+                placeholder="Search designations..."
+                variant="outlined"
+                size="small"
+                fullWidth
+                sx={{ 
+                  width: { sm: '250px' },
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '24px',
+                    '& fieldset': { borderColor: '#dadce0' },
+                    '&:hover fieldset': { borderColor: '#bdc1c6' },
+                    '&.Mui-focused fieldset': { borderColor: '#1a73e8' }
+                  }
+                }}
+                value={searchTerm}
+                onChange={handleSearchChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search size={18} color="#5f6368" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                variant="contained"
+                sx={{ 
+                  bgcolor: '#1a73e8', 
+                  borderRadius: '24px',
+                  textTransform: 'none',
+                  boxShadow: 'none',
+                  '&:hover': { bgcolor: '#1765cc', boxShadow: '0 1px 3px 0 rgba(60,64,67,0.3)' }
+                }}
+                startIcon={<Plus size={16} />}
+                onClick={handleAddRole}
+              >
+                Create Designation
+              </Button>
+              <Tooltip title="Refresh">
+                <IconButton 
+                  onClick={fetchRoles} 
+                  sx={{ 
+                    bgcolor: '#f1f3f4', 
+                    borderRadius: '50%',
+                    '&:hover': { bgcolor: '#e8eaed' }
+                  }}
+                >
+                  <RefreshCw size={18} color="#5f6368" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
 
-      {error && (
-        <Alert severity="error" className="mb-4">
-          {error}
-        </Alert>
-      )}
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mt: 2, 
+                borderRadius: '8px',
+                '& .MuiAlert-icon': { color: '#d93025' }
+              }}
+            >
+              {error}
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
-      <Paper className="shadow-sm">
+      <Card 
+        elevation={0} 
+        sx={{ 
+          borderRadius: '16px', 
+          overflow: 'hidden',
+          border: '1px solid #dadce0' 
+        }}
+      >
         {loading ? (
-          <Box className="flex justify-center items-center p-8">
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
             <CircularProgress />
           </Box>
         ) : (
           <>
-            <TableContainer>
-              <Table>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table sx={{ minWidth: 650 }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Designation Name</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Permissions</TableCell>
-                    <TableCell align="right">Actions</TableCell>
+                    <TableCell 
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: '#5f6368', 
+                        borderBottom: '1px solid #e0e0e0',
+                        py: 2
+                      }}
+                    >
+                      Designation Name
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: '#5f6368', 
+                        borderBottom: '1px solid #e0e0e0',
+                        py: 2
+                      }}
+                    >
+                      Description
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: '#5f6368', 
+                        borderBottom: '1px solid #e0e0e0',
+                        py: 2
+                      }}
+                    >
+                      Permissions
+                    </TableCell>
+                    <TableCell 
+                      align="right"
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: '#5f6368', 
+                        borderBottom: '1px solid #e0e0e0',
+                        py: 2
+                      }}
+                    >
+                      Actions
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -387,55 +519,90 @@ const Designations = () => {
                     filteredRoles
                       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                       .map((role) => (
-                        <TableRow key={role.id} hover>
+                        <TableRow 
+                          key={role.id} 
+                          hover
+                          sx={{ 
+                            '&:hover': { bgcolor: '#f8f9fa' },
+                            '& td': { borderBottom: '1px solid #e0e0e0', py: 2 }
+                          }}
+                        >
                           <TableCell>
-                            <div className="flex items-center">
-                              <Shield size={16} className="mr-2 text-blue-600" />
-                              {role.name}
-                            </div>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Avatar 
+                                sx={{ 
+                                  width: 32, 
+                                  height: 32, 
+                                  bgcolor: '#e8f0fe', 
+                                  color: '#1a73e8',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 500,
+                                  mr: 1.5
+                                }}
+                              >
+                                {role.name.charAt(0).toUpperCase()}
+                              </Avatar>
+                              <Typography sx={{ color: '#202124', fontWeight: 500 }}>
+                                {role.name}
+                              </Typography>
+                            </Box>
                           </TableCell>
-                          <TableCell>{role.description || '-'}</TableCell>
+                          <TableCell sx={{ color: '#5f6368' }}>
+                            {role.description || '—'}
+                          </TableCell>
                           <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {role.permissions && role.permissions.map(permission => (
-                                <Chip 
-                                  key={permission}
-                                  label={availablePermissions.find(p => p.id === permission)?.label || permission} 
-                                  size="small" 
-                                  color="primary"
-                                  variant="outlined"
-                                  className="mr-1 mb-1"
-                                />
-                              ))}
-                              {(!role.permissions || role.permissions.length === 0) && (
-                                <span className="text-gray-500 text-sm italic">No permissions</span>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {role.permissions && role.permissions.length > 0 ? (
+                                role.permissions.map(permission => (
+                                  <Chip 
+                                    key={permission}
+                                    label={availablePermissions.find(p => p.id === permission)?.label || permission} 
+                                    size="small" 
+                                    sx={{ 
+                                      bgcolor: '#e8f0fe', 
+                                      color: '#1a73e8',
+                                      borderRadius: '16px',
+                                      '& .MuiChip-label': { px: 1.5 },
+                                      fontSize: '0.75rem',
+                                      height: '24px'
+                                    }}
+                                  />
+                                ))
+                              ) : (
+                                <Typography variant="body2" sx={{ color: '#80868b', fontStyle: 'italic' }}>
+                                  No permissions
+                                </Typography>
                               )}
-                            </div>
+                            </Box>
                           </TableCell>
                           <TableCell align="right">
-                            <IconButton 
-                              size="small" 
-                              color="primary"
-                              onClick={() => handleEditRole(role.id)}
-                            >
-                              <Edit size={18} />
-                            </IconButton>
-                            <IconButton 
-                              size="small" 
-                              color="error"
-                              onClick={() => handleDeleteClick(role)}
-                            >
-                              <Delete size={18} />
-                            </IconButton>
+                            <Tooltip title="More actions">
+                              <IconButton 
+                                size="small"
+                                onClick={(e) => handleMenuOpen(e, role.id)}
+                                sx={{ 
+                                  color: '#5f6368',
+                                  '&:hover': { bgcolor: '#f1f3f4' }
+                                }}
+                              >
+                                <MoreVertical size={18} />
+                              </IconButton>
+                            </Tooltip>
                           </TableCell>
                         </TableRow>
                       ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} align="center" className="py-8">
-                        <Typography variant="body1" color="textSecondary">
-                          No designations found
-                        </Typography>
+                      <TableCell colSpan={4} sx={{ textAlign: 'center', py: 6 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                          <Info size={40} color="#80868b" />
+                          <Typography sx={{ color: '#5f6368', mt: 1 }}>
+                            No designations found
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#80868b' }}>
+                            Create a new designation to get started
+                          </Typography>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   )}
@@ -450,179 +617,290 @@ const Designations = () => {
               page={page}
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
+              sx={{
+                borderTop: '1px solid #e0e0e0',
+                '.MuiTablePagination-select': {
+                  borderRadius: '4px',
+                  '&:focus': { bgcolor: '#f1f3f4' }
+                },
+                '.MuiTablePagination-selectIcon': { color: '#5f6368' },
+                '.MuiTablePagination-displayedRows': { color: '#5f6368' },
+                '.MuiTablePagination-actions': {
+                  '& .MuiIconButton-root': {
+                    color: '#5f6368',
+                    '&:hover': { bgcolor: '#f1f3f4' },
+                    '&.Mui-disabled': { color: '#dadce0' }
+                  }
+                }
+              }}
             />
           </>
         )}
-      </Paper>
+      </Card>
+      
+      {/* Action Menu */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        TransitionComponent={Fade}
+        elevation={2}
+        sx={{
+          '& .MuiPaper-root': {
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(60,64,67,.3)',
+            mt: 0.5
+          },
+          '& .MuiMenuItem-root': {
+            fontSize: '0.875rem',
+            py: 1,
+            px: 2,
+            '&:hover': { bgcolor: '#f1f3f4' }
+          }
+        }}
+      >
+        <MenuItem onClick={handleMenuEdit}>
+          <Edit size={16} style={{ marginRight: 8, color: '#5f6368' }} />
+          Edit
+        </MenuItem>
+        <MenuItem onClick={handleMenuDelete} sx={{ color: '#d93025' }}>
+          <Delete size={16} style={{ marginRight: 8 }} />
+          Delete
+        </MenuItem>
+      </Menu>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteCancel}
+        PaperProps={{
+          sx: {
+            borderRadius: '8px',
+            boxShadow: '0 24px 38px 3px rgba(60,64,67,0.14), 0 9px 46px 8px rgba(60,64,67,0.12), 0 11px 15px -7px rgba(60,64,67,0.2)',
+            maxWidth: '400px'
+          }
+        }}
       >
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle sx={{ pb: 1, fontWeight: 500, color: '#202124' }}>
+          Delete designation
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
+          <DialogContentText sx={{ color: '#5f6368' }}>
             Are you sure you want to delete the designation "{roleToDelete?.name}"? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} color="primary">
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button 
+            onClick={handleDeleteCancel} 
+            sx={{ 
+              color: '#5f6368', 
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#f1f3f4' }
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+          <Button 
+            onClick={handleDeleteConfirm} 
+            variant="contained"
+            sx={{ 
+              bgcolor: '#d93025', 
+              color: 'white',
+              textTransform: 'none',
+              boxShadow: 'none',
+              '&:hover': { bgcolor: '#c5221f', boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }
+            }}
+          >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Role Add/Edit Modal */}
-      {roleModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
-                {isEditMode ? 'Edit Designation' : 'Create Designation'}
-              </h3>
-            </div>
+      <Dialog
+        open={roleModalOpen}
+        onClose={handleCloseRoleModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '8px',
+            boxShadow: '0 24px 38px 3px rgba(60,64,67,0.14), 0 9px 46px 8px rgba(60,64,67,0.12), 0 11px 15px -7px rgba(60,64,67,0.2)',
+            overflow: 'visible'
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1, fontWeight: 500, color: '#202124' }}>
+          {isEditMode ? 'Edit Designation' : 'Create Designation'}
+        </DialogTitle>
+        
+        <DialogContent sx={{ pt: 2 }}>
+          {formSuccess && (
+            <Alert 
+              severity="success" 
+              icon={<CheckCircle size={20} />}
+              sx={{ 
+                mb: 2, 
+                borderRadius: '8px',
+                bgcolor: '#e6f4ea',
+                color: '#1e8e3e',
+                '& .MuiAlert-icon': { color: '#1e8e3e' }
+              }}
+            >
+              Designation {isEditMode ? 'updated' : 'created'} successfully!
+            </Alert>
+          )}
 
-            {formSuccess && (
-              <div className="px-6 pt-4">
-                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-                  Designation {isEditMode ? 'updated' : 'created'} successfully!
-                </div>
-              </div>
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 2, 
+                borderRadius: '8px',
+                '& .MuiAlert-icon': { color: '#d93025' }
+              }}
+            >
+              {error}
+            </Alert>
+          )}
+
+          <form onSubmit={handleRoleFormSubmit}>
+            <TextField
+              label="Designation Name"
+              id="name"
+              name="name"
+              value={roleFormData.name}
+              onChange={handleInputChange}
+              placeholder="e.g., Sales Manager, Team Lead, etc."
+              fullWidth
+              margin="normal"
+              error={!!formErrors.name}
+              helperText={formErrors.name}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '4px',
+                  '& fieldset': { borderColor: formErrors.name ? '#d93025' : '#dadce0' },
+                  '&:hover fieldset': { borderColor: formErrors.name ? '#d93025' : '#bdc1c6' },
+                  '&.Mui-focused fieldset': { borderColor: formErrors.name ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormLabel-root': {
+                  color: formErrors.name ? '#d93025' : '#5f6368',
+                  '&.Mui-focused': { color: formErrors.name ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormHelperText-root': {
+                  color: '#d93025',
+                  marginLeft: 0
+                }
+              }}
+            />
+
+            <TextField
+              label="Description (Optional)"
+              id="description"
+              name="description"
+              value={roleFormData.description}
+              onChange={handleInputChange}
+              placeholder="Brief description of this designation"
+              fullWidth
+              margin="normal"
+              multiline
+              rows={3}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '4px',
+                  '& fieldset': { borderColor: '#dadce0' },
+                  '&:hover fieldset': { borderColor: '#bdc1c6' },
+                  '&.Mui-focused fieldset': { borderColor: '#1a73e8' }
+                },
+                '& .MuiFormLabel-root': {
+                  color: '#5f6368',
+                  '&.Mui-focused': { color: '#1a73e8' }
+                }
+              }}
+            />
+
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={{ color: '#202124', fontWeight: 500, mb: 1 }}>
+                Permissions
+              </Typography>
+              
+              <Paper 
+                variant="outlined" 
+                sx={{ 
+                  p: 2, 
+                  maxHeight: '200px', 
+                  overflowY: 'auto',
+                  borderColor: formErrors.permissions ? '#d93025' : '#dadce0',
+                  borderRadius: '4px'
+                }}
+              >
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
+                  {availablePermissions.map((permission) => (
+                    <FormControlLabel
+                      key={permission.id}
+                      control={
+                        <Checkbox
+                          checked={roleFormData.permissions.includes(permission.id)}
+                          onChange={() => handlePermissionChange(permission.id)}
+                          sx={{
+                            color: '#5f6368',
+                            '&.Mui-checked': { color: '#1a73e8' }
+                          }}
+                        />
+                      }
+                      label={<Typography sx={{ color: '#5f6368', fontSize: '0.875rem' }}>{permission.label}</Typography>}
+                    />
+                  ))}
+                </Box>
+              </Paper>
+              
+              {formErrors.permissions && (
+                <Typography variant="caption" sx={{ color: '#d93025', display: 'block', mt: 0.5, ml: 0 }}>
+                  {formErrors.permissions}
+                </Typography>
+              )}
+            </Box>
+          </form>
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button 
+            onClick={handleCloseRoleModal} 
+            sx={{ 
+              color: '#5f6368', 
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#f1f3f4' }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleRoleFormSubmit}
+            disabled={formLoading}
+            variant="contained"
+            sx={{ 
+              bgcolor: '#1a73e8', 
+              color: 'white',
+              textTransform: 'none',
+              boxShadow: 'none',
+              '&:hover': { bgcolor: '#1765cc', boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' },
+              '&.Mui-disabled': { bgcolor: '#dadce0', color: '#5f6368' }
+            }}
+            startIcon={formLoading ? (
+              <CircularProgress size={16} sx={{ color: 'white' }} />
+            ) : (
+              <Save size={16} />
             )}
-
-            {error && (
-              <div className="px-6 pt-4">
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                  {error}
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleRoleFormSubmit} className="px-6 py-4">
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="name"
-                >
-                  Designation Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={roleFormData.name}
-                  onChange={handleInputChange}
-                  className={`shadow appearance-none border ${
-                    formErrors.name ? "border-red-500" : "border-gray-300"
-                  } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
-                  placeholder="e.g., Sales Manager, Team Lead, etc."
-                />
-                {formErrors.name && (
-                  <p className="text-red-500 text-xs italic mt-1">
-                    {formErrors.name}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="description"
-                >
-                  Description (Optional)
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={roleFormData.description}
-                  onChange={handleInputChange}
-                  className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]"
-                  placeholder="Brief description of this designation"
-                  rows={3}
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Permissions
-                </label>
-                <div className="mt-2 border border-gray-300 rounded p-3 max-h-60 overflow-y-auto">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {availablePermissions.map((permission) => (
-                      <FormControlLabel
-                        key={permission.id}
-                        control={
-                          <Checkbox
-                            checked={roleFormData.permissions.includes(permission.id)}
-                            onChange={() => handlePermissionChange(permission.id)}
-                            color="primary"
-                          />
-                        }
-                        label={permission.label}
-                      />
-                    ))}
-                  </div>
-                </div>
-                {formErrors.permissions && (
-                  <p className="text-red-500 text-xs italic mt-1">
-                    {formErrors.permissions}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-end border-t border-gray-200 pt-4">
-                <button
-                  type="button"
-                  onClick={handleCloseRoleModal}
-                  className="bg-white hover:bg-gray-100 text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md shadow-sm mr-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-[#47BCCB] hover:bg-[#3da7b4] text-white font-semibold py-2 px-4 rounded-md shadow-sm flex items-center"
-                  disabled={formLoading}
-                >
-                  {formLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      {isEditMode ? 'Updating...' : 'Creating...'}
-                    </>
-                  ) : (
-                    <>
-                      <Save size={18} className="mr-1" />
-                      {isEditMode ? "Update Designation" : "Create Designation"}
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          >
+            {formLoading ? 
+              (isEditMode ? 'Updating...' : 'Creating...') : 
+              (isEditMode ? 'Update' : 'Create')
+            }
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
