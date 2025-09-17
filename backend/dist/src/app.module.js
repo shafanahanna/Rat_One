@@ -20,6 +20,7 @@ const employee_module_1 = require("./employee/employee.module");
 const payroll_module_1 = require("./payroll/payroll.module");
 const attendance_module_1 = require("./attendance/attendance.module");
 const leave_management_module_1 = require("./leave-management/leave-management.module");
+const roles_module_1 = require("./roles.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -57,6 +58,7 @@ exports.AppModule = AppModule = __decorate([
             payroll_module_1.PayrollModule,
             attendance_module_1.AttendanceModule,
             leave_management_module_1.LeaveManagementModule,
+            roles_module_1.RolesModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

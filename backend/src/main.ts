@@ -18,7 +18,7 @@ async function bootstrap() {
   
   // Enable CORS for frontend with enhanced configuration
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'],
+    origin: true, // Allow all origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'admintoken', 'Admintoken', 'admin-token', 'Admin-Token'],
     credentials: true,

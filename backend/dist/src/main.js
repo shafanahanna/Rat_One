@@ -14,7 +14,7 @@ async function bootstrap() {
         console.error('❌ Failed to establish database connection');
     }
     app.enableCors({
-        origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'],
+        origin: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'admintoken', 'Admintoken', 'admin-token', 'Admin-Token'],
         credentials: true,

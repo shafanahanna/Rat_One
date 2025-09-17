@@ -11,6 +11,8 @@ import { EmployeeModule } from './employee/employee.module';
 import { PayrollModule } from './payroll/payroll.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { LeaveManagementModule } from './leave-management/leave-management.module';
+import { RolesModule as AuthRolesModule } from './auth/roles/roles.module';
+import { RolesModule } from './roles.module';
 
 @Module({
   imports: [
@@ -46,6 +48,7 @@ import { LeaveManagementModule } from './leave-management/leave-management.modul
     PayrollModule, // Import the PayrollModule
     AttendanceModule, // Import the AttendanceModule
     LeaveManagementModule, // Import the LeaveManagementModule
+    RolesModule, // Import the RolesModule
   ],
   controllers: [AppController],
   providers: [AppService],
