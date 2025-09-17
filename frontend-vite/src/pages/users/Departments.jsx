@@ -14,7 +14,6 @@ import {
   TextField,
   InputAdornment,
   IconButton,
-  Chip,
   Box,
   CircularProgress,
   Alert,
@@ -23,12 +22,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  FormControlLabel,
-  Checkbox,
   Card,
   CardContent,
   Tooltip,
-  Divider,
   Menu,
   MenuItem,
   Fade,
@@ -41,20 +37,17 @@ import {
   Plus, 
   RefreshCw, 
   Save, 
-  Shield, 
-  MoreVertical, 
   Info,
-  CheckCircle
+  MoreVertical,
+  CheckCircle,
+  Building
 } from 'lucide-react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { PERMISSION_UI } from '../../constants/permissions';
 
-const Designations = () => {
-  const navigate = useNavigate();
+const Departments = () => {
   const API_URL = import.meta.env.VITE_API_URL;
-  const [roles, setRoles] = useState([]);
-  const [filteredRoles, setFilteredRoles] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [filteredDepartments, setFilteredDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,43 +56,42 @@ const Designations = () => {
   
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [roleToDelete, setRoleToDelete] = useState(null);
+  const [departmentToDelete, setDepartmentToDelete] = useState(null);
   
-  // Role modal state
-  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  // Department modal state
+  const [departmentModalOpen, setDepartmentModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [roleFormData, setRoleFormData] = useState({
+  const [departmentFormData, setDepartmentFormData] = useState({
     id: '',
     name: '',
-    description: '',
-    permissions: [],
-    departmentId: ''
+    description: ''
   });
   const [formErrors, setFormErrors] = useState({
-    name: '',
-    permissions: ''
+    name: ''
   });
   const [formSuccess, setFormSuccess] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
-  const [selectedRoleId, setSelectedRoleId] = useState(null);
-
-  // Available permissions state
-  const [availablePermissions, setAvailablePermissions] = useState(PERMISSION_UI);
-  const [loadingPermissions, setLoadingPermissions] = useState(false);
-
-  // Departments state
-  const [departments, setDepartments] = useState([]);
-  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState(null);
 
   useEffect(() => {
-    fetchRoles();
-    fetchPermissions();
     fetchDepartments();
   }, []);
   
+  useEffect(() => {
+    if (departments.length > 0) {
+      const filtered = departments.filter(department => 
+        department.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        department.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredDepartments(filtered);
+    }
+  }, [searchTerm, departments]);
+
   const fetchDepartments = async () => {
-    setLoadingDepartments(true);
+    setLoading(true);
+    setError(null);
+    
     try {
       const token = localStorage.getItem('Admintoken');
       const response = await axios.get(`${API_URL}/api/departments`, {
@@ -108,71 +100,14 @@ const Designations = () => {
       
       if (response.data && response.data.data) {
         setDepartments(response.data.data);
+        setFilteredDepartments(response.data.data);
       } else {
         setDepartments([]);
+        setFilteredDepartments([]);
       }
     } catch (error) {
       console.error('Error fetching departments:', error);
-      setDepartments([]);
-    } finally {
-      setLoadingDepartments(false);
-    }
-  };
-
-  const fetchPermissions = async () => {
-    setLoadingPermissions(true);
-    try {
-      const token = localStorage.getItem('Admintoken');
-      const response = await axios.get(`${API_URL}/api/permissions`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data && response.data.data) {
-        // Transform API response to match our UI format
-        const apiPermissions = response.data.data;
-        const formattedPermissions = apiPermissions.map(perm => ({
-          id: perm.id,
-          label: perm.description || perm.name,
-          description: `${perm.module}: ${perm.description}`
-        }));
-        
-        setAvailablePermissions(formattedPermissions);
-      }
-    } catch (error) {
-      console.error('Error fetching permissions:', error);
-      // Fallback to default permissions if API fails
-      setAvailablePermissions(PERMISSION_UI);
-    } finally {
-      setLoadingPermissions(false);
-    }
-  };
-
-  useEffect(() => {
-    if (roles.length > 0) {
-      const filtered = roles.filter(role => 
-        role.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        role.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredRoles(filtered);
-    }
-  }, [searchTerm, roles]);
-
-  const fetchRoles = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem('Admintoken');
-      const response = await axios.get(`${API_URL}/api/roles`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data && response.data.data) {
-        setRoles(response.data.data);
-        setFilteredRoles(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching designations:', error);
-      setError('Failed to fetch designations. Please try again later.');
+      setError('Failed to fetch departments. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -191,11 +126,11 @@ const Designations = () => {
     setSearchTerm(event.target.value);
   };
 
-  // Role form handlers
+  // Department form handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setRoleFormData({
-      ...roleFormData,
+    setDepartmentFormData({
+      ...departmentFormData,
       [name]: value
     });
     
@@ -208,106 +143,68 @@ const Designations = () => {
     }
   };
 
-  const handlePermissionChange = (permission) => {
-    const currentPermissions = [...roleFormData.permissions];
-    
-    if (currentPermissions.includes(permission)) {
-      // Remove permission if already selected
-      setRoleFormData({
-        ...roleFormData,
-        permissions: currentPermissions.filter(p => p !== permission)
-      });
-    } else {
-      // Add permission if not selected
-      setRoleFormData({
-        ...roleFormData,
-        permissions: [...currentPermissions, permission]
-      });
-    }
-    
-    // Clear permission error if any
-    if (formErrors.permissions) {
-      setFormErrors({
-        ...formErrors,
-        permissions: ''
-      });
-    }
-  };
-
   const validateForm = () => {
     let valid = true;
     const newErrors = { ...formErrors };
     
     // Validate name
-    if (!roleFormData.name.trim()) {
-      newErrors.name = 'Designation name is required';
+    if (!departmentFormData.name.trim()) {
+      newErrors.name = 'Department name is required';
       valid = false;
     }
     
-    // Trim any trailing spaces from the role name
-    // This prevents issues with the backend expecting exact role names
-    if (roleFormData.name) {
-      roleFormData.name = roleFormData.name.trim();
-    }
-    
-    // Validate permissions
-    if (roleFormData.permissions.length === 0) {
-      newErrors.permissions = 'At least one permission must be selected';
-      valid = false;
+    // Trim any trailing spaces from the department name
+    if (departmentFormData.name) {
+      departmentFormData.name = departmentFormData.name.trim();
     }
     
     setFormErrors(newErrors);
     return valid;
   };
 
-  const handleAddRole = () => {
+  const handleAddDepartment = () => {
     setIsEditMode(false);
-    setRoleFormData({
+    setDepartmentFormData({
       id: '',
       name: '',
-      description: '',
-      permissions: [],
-      departmentId: ''
+      description: ''
     });
     setFormErrors({
-      name: '',
-      permissions: ''
+      name: ''
     });
     setFormSuccess(false);
-    setRoleModalOpen(true);
+    setDepartmentModalOpen(true);
   };
 
-  const handleEditRole = async (roleId) => {
+  const handleEditDepartment = async (departmentId) => {
     setFormLoading(true);
     setIsEditMode(true);
     setFormSuccess(false);
     
     try {
       const token = localStorage.getItem('Admintoken');
-      const response = await axios.get(`${API_URL}/api/roles/${roleId}`, {
+      const response = await axios.get(`${API_URL}/api/departments/${departmentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data && response.data.data) {
-        const roleData = response.data.data;
-        setRoleFormData({
-          id: roleData.id,
-          name: roleData.name,
-          description: roleData.description || '',
-          permissions: roleData.permissions || [],
-          departmentId: roleData.departmentId || ''
+        const departmentData = response.data.data;
+        setDepartmentFormData({
+          id: departmentData.id,
+          name: departmentData.name,
+          description: departmentData.description || ''
         });
       }
-      setRoleModalOpen(true);
+      setDepartmentModalOpen(true);
     } catch (error) {
-      console.error('Error fetching designation details:', error);
-      setError('Failed to fetch designation details. Please try again later.');
+      console.error('Error fetching department details:', error);
+      setError(error.response?.data?.message || 'Failed to fetch department details. Please try again later.');
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleRoleFormSubmit = async (e) => {
+  const handleDepartmentFormSubmit = async (e) => {
     e.preventDefault();
     
     // Reset states
@@ -319,10 +216,10 @@ const Designations = () => {
       return;
     }
     
-    // Ensure role name is properly trimmed
+    // Ensure department name is properly trimmed
     const formData = {
-      ...roleFormData,
-      name: roleFormData.name.trim()
+      ...departmentFormData,
+      name: departmentFormData.name.trim()
     };
     
     setFormLoading(true);
@@ -331,99 +228,90 @@ const Designations = () => {
       const token = localStorage.getItem('Admintoken');
       
       if (isEditMode) {
+        // Update existing department
         await axios.put(
-          `${API_URL}/api/roles/${formData.id}`,
+          `${API_URL}/api/departments/${formData.id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        
-        // Update role in the list
-        setRoles(roles.map(role => 
-          role.id === formData.id ? { ...role, ...formData } : role
-        ));
       } else {
-        const response = await axios.post(
-          `${API_URL}/api/roles`,
+        // Create new department
+        await axios.post(
+          `${API_URL}/api/departments`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        
-        // Add new role to the list
-        if (response.data && response.data.data) {
-          setRoles([...roles, response.data.data]);
-        }
       }
       
       setFormSuccess(true);
       
-      // Close modal after a short delay
+      // Close modal after a short delay and refresh the departments list
       setTimeout(() => {
-        setRoleModalOpen(false);
-        fetchRoles(); // Refresh the list to get updated data
+        setDepartmentModalOpen(false);
+        fetchDepartments(); // Refresh the list to get updated data
       }, 1500);
       
     } catch (error) {
-      console.error('Error saving designation:', error);
-      setError(error.response?.data?.message || 'Failed to save designation. Please try again.');
+      console.error('Error saving department:', error);
+      setError(error.response?.data?.message || 'Failed to save department. Please try again.');
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleDeleteClick = (role) => {
-    setRoleToDelete(role);
+  const handleDeleteClick = (department) => {
+    setDepartmentToDelete(department);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!roleToDelete) return;
+    if (!departmentToDelete) return;
     
     try {
       const token = localStorage.getItem('Admintoken');
-      await axios.delete(`${API_URL}/api/roles/${roleToDelete.id}`, {
+      await axios.delete(`${API_URL}/api/departments/${departmentToDelete.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Remove role from state
-      setRoles(roles.filter(role => role.id !== roleToDelete.id));
-      setFilteredRoles(filteredRoles.filter(role => role.id !== roleToDelete.id));
+      // Refresh the departments list
+      fetchDepartments();
     } catch (error) {
-      console.error('Error deleting designation:', error);
-      setError('Failed to delete designation. Please try again later.');
+      console.error('Error deleting department:', error);
+      setError(error.response?.data?.message || 'Failed to delete department. Please try again later.');
     } finally {
       setDeleteDialogOpen(false);
-      setRoleToDelete(null);
+      setDepartmentToDelete(null);
     }
   };
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
-    setRoleToDelete(null);
+    setDepartmentToDelete(null);
   };
 
-  const handleCloseRoleModal = () => {
-    setRoleModalOpen(false);
+  const handleCloseDepartmentModal = () => {
+    setDepartmentModalOpen(false);
   };
 
-  const handleMenuOpen = (event, roleId) => {
+  const handleMenuOpen = (event, departmentId) => {
     setMenuAnchorEl(event.currentTarget);
-    setSelectedRoleId(roleId);
+    setSelectedDepartmentId(departmentId);
   };
 
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
-    setSelectedRoleId(null);
+    setSelectedDepartmentId(null);
   };
 
   const handleMenuEdit = () => {
-    handleEditRole(selectedRoleId);
+    handleEditDepartment(selectedDepartmentId);
     handleMenuClose();
   };
 
   const handleMenuDelete = () => {
-    const roleToDelete = roles.find(role => role.id === selectedRoleId);
-    if (roleToDelete) {
-      setRoleToDelete(roleToDelete);
+    const departmentToDelete = departments.find(dept => dept.id === selectedDepartmentId);
+    if (departmentToDelete) {
+      setDepartmentToDelete(departmentToDelete);
       setDeleteDialogOpen(true);
     }
     handleMenuClose();
@@ -444,12 +332,12 @@ const Designations = () => {
                 mb: { xs: 2, md: 0 }
               }}
             >
-              Designation Management
+              Department Management
             </Typography>
             
             <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', md: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
               <TextField
-                placeholder="Search designations..."
+                placeholder="Search departments..."
                 variant="outlined"
                 size="small"
                 fullWidth
@@ -482,13 +370,13 @@ const Designations = () => {
                   '&:hover': { bgcolor: '#1765cc', boxShadow: '0 1px 3px 0 rgba(60,64,67,0.3)' }
                 }}
                 startIcon={<Plus size={16} />}
-                onClick={handleAddRole}
+                onClick={handleAddDepartment}
               >
-                Create Designation
+                Create Department
               </Button>
               <Tooltip title="Refresh">
                 <IconButton 
-                  onClick={fetchRoles} 
+                  onClick={fetchDepartments} 
                   sx={{ 
                     bgcolor: '#f1f3f4', 
                     borderRadius: '50%',
@@ -542,7 +430,7 @@ const Designations = () => {
                         py: 2
                       }}
                     >
-                      Designation Name
+                      Department Name
                     </TableCell>
                     <TableCell 
                       sx={{ 
@@ -553,16 +441,6 @@ const Designations = () => {
                       }}
                     >
                       Description
-                    </TableCell>
-                    <TableCell 
-                      sx={{ 
-                        fontWeight: 500, 
-                        color: '#5f6368', 
-                        borderBottom: '1px solid #e0e0e0',
-                        py: 2
-                      }}
-                    >
-                      Permissions
                     </TableCell>
                     <TableCell 
                       align="right"
@@ -578,12 +456,12 @@ const Designations = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredRoles.length > 0 ? (
-                    filteredRoles
+                  {filteredDepartments.length > 0 ? (
+                    filteredDepartments
                       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                      .map((role) => (
+                      .map((department) => (
                         <TableRow 
-                          key={role.id} 
+                          key={department.id} 
                           hover
                           sx={{ 
                             '&:hover': { bgcolor: '#f8f9fa' },
@@ -603,46 +481,21 @@ const Designations = () => {
                                   mr: 1.5
                                 }}
                               >
-                                {role.name.charAt(0).toUpperCase()}
+                                <Building size={16} />
                               </Avatar>
                               <Typography sx={{ color: '#202124', fontWeight: 500 }}>
-                                {role.name}
+                                {department.name}
                               </Typography>
                             </Box>
                           </TableCell>
                           <TableCell sx={{ color: '#5f6368' }}>
-                            {role.description || '—'}
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {role.permissions && role.permissions.length > 0 ? (
-                                role.permissions.map(permission => (
-                                  <Chip 
-                                    key={permission}
-                                    label={availablePermissions.find(p => p.id === permission)?.label || permission} 
-                                    size="small" 
-                                    sx={{ 
-                                      bgcolor: '#e8f0fe', 
-                                      color: '#1a73e8',
-                                      borderRadius: '16px',
-                                      '& .MuiChip-label': { px: 1.5 },
-                                      fontSize: '0.75rem',
-                                      height: '24px'
-                                    }}
-                                  />
-                                ))
-                              ) : (
-                                <Typography variant="body2" sx={{ color: '#80868b', fontStyle: 'italic' }}>
-                                  No permissions
-                                </Typography>
-                              )}
-                            </Box>
+                            {department.description || '—'}
                           </TableCell>
                           <TableCell align="right">
                             <Tooltip title="More actions">
                               <IconButton 
                                 size="small"
-                                onClick={(e) => handleMenuOpen(e, role.id)}
+                                onClick={(e) => handleMenuOpen(e, department.id)}
                                 sx={{ 
                                   color: '#5f6368',
                                   '&:hover': { bgcolor: '#f1f3f4' }
@@ -656,14 +509,14 @@ const Designations = () => {
                       ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} sx={{ textAlign: 'center', py: 6 }}>
+                      <TableCell colSpan={3} sx={{ textAlign: 'center', py: 6 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                           <Info size={40} color="#80868b" />
                           <Typography sx={{ color: '#5f6368', mt: 1 }}>
-                            No designations found
+                            No departments found
                           </Typography>
                           <Typography variant="body2" sx={{ color: '#80868b' }}>
-                            Create a new designation to get started
+                            Create a new department to get started
                           </Typography>
                         </Box>
                       </TableCell>
@@ -675,7 +528,7 @@ const Designations = () => {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={filteredRoles.length}
+              count={filteredDepartments.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
@@ -745,11 +598,11 @@ const Designations = () => {
         }}
       >
         <DialogTitle sx={{ pb: 1, fontWeight: 500, color: '#202124' }}>
-          Delete designation
+          Delete department
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ color: '#5f6368' }}>
-            Are you sure you want to delete the designation "{roleToDelete?.name}"? This action cannot be undone.
+            Are you sure you want to delete the department "{departmentToDelete?.name}"? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 1 }}>
@@ -779,10 +632,10 @@ const Designations = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Role Add/Edit Modal */}
+      {/* Department Add/Edit Modal */}
       <Dialog
-        open={roleModalOpen}
-        onClose={handleCloseRoleModal}
+        open={departmentModalOpen}
+        onClose={handleCloseDepartmentModal}
         maxWidth="sm"
         fullWidth
         PaperProps={{
@@ -794,7 +647,7 @@ const Designations = () => {
         }}
       >
         <DialogTitle sx={{ pb: 1, fontWeight: 500, color: '#202124' }}>
-          {isEditMode ? 'Edit Designation' : 'Create Designation'}
+          {isEditMode ? 'Edit Department' : 'Create Department'}
         </DialogTitle>
         
         <DialogContent sx={{ pt: 2 }}>
@@ -810,7 +663,7 @@ const Designations = () => {
                 '& .MuiAlert-icon': { color: '#1e8e3e' }
               }}
             >
-              Designation {isEditMode ? 'updated' : 'created'} successfully!
+              Department {isEditMode ? 'updated' : 'created'} successfully!
             </Alert>
           )}
 
@@ -827,14 +680,14 @@ const Designations = () => {
             </Alert>
           )}
 
-          <form onSubmit={handleRoleFormSubmit}>
+          <form onSubmit={handleDepartmentFormSubmit}>
             <TextField
-              label="Designation Name"
+              label="Department Name"
               id="name"
               name="name"
-              value={roleFormData.name}
+              value={departmentFormData.name}
               onChange={handleInputChange}
-              placeholder="e.g., Sales Manager, Team Lead, etc."
+              placeholder="e.g., Human Resources, Finance, etc."
               fullWidth
               margin="normal"
               error={!!formErrors.name}
@@ -862,9 +715,9 @@ const Designations = () => {
               label="Description (Optional)"
               id="description"
               name="description"
-              value={roleFormData.description}
+              value={departmentFormData.description}
               onChange={handleInputChange}
-              placeholder="Brief description of this designation"
+              placeholder="Brief description of this department"
               fullWidth
               margin="normal"
               multiline
@@ -884,124 +737,13 @@ const Designations = () => {
               }}
             />
 
-            {/* Department Dropdown */}
-            <TextField
-              select
-              label="Department (Optional)"
-              id="departmentId"
-              name="departmentId"
-              value={roleFormData.departmentId || ''}
-              onChange={handleInputChange}
-              placeholder="Select a department"
-              fullWidth
-              margin="normal"
-              sx={{
-                mb: 2,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '4px',
-                  '& fieldset': { borderColor: '#dadce0' },
-                  '&:hover fieldset': { borderColor: '#bdc1c6' },
-                  '&.Mui-focused fieldset': { borderColor: '#1a73e8' }
-                },
-                '& .MuiFormLabel-root': {
-                  color: '#5f6368',
-                  '&.Mui-focused': { color: '#1a73e8' }
-                }
-              }}
-              SelectProps={{
-                MenuProps: {
-                  PaperProps: {
-                    sx: {
-                      maxHeight: 300,
-                      '& .MuiMenuItem-root': {
-                        py: 1,
-                        fontSize: '0.875rem'
-                      }
-                    }
-                  }
-                }
-              }}
-            >
-              <MenuItem value="">
-                <em>None</em>
-              </MenuItem>
-              {loadingDepartments ? (
-                <MenuItem disabled>
-                  <CircularProgress size={20} sx={{ mr: 1 }} />
-                  Loading departments...
-                </MenuItem>
-              ) : departments.length > 0 ? (
-                departments.map((dept) => (
-                  <MenuItem key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>
-                  No departments available
-                </MenuItem>
-              )}
-            </TextField>
-
-            <Box sx={{ mb: 2 }}>
-              <Typography sx={{ color: '#202124', fontWeight: 500, mb: 1 }}>
-                Permissions
-              </Typography>
-              
-              <Paper 
-                variant="outlined" 
-                sx={{ 
-                  p: 2, 
-                  maxHeight: '300px', 
-                  overflowY: 'auto',
-                  borderColor: formErrors.permissions ? '#d93025' : '#dadce0',
-                  borderRadius: '4px'
-                }}
-              >
-                {loadingPermissions ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                    <CircularProgress size={24} sx={{ color: '#1a73e8' }} />
-                  </Box>
-                ) : (
-                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
-                    {availablePermissions.map((permission) => (
-                      <FormControlLabel
-                        key={permission.id}
-                        control={
-                          <Checkbox
-                            checked={roleFormData.permissions.includes(permission.id)}
-                            onChange={() => handlePermissionChange(permission.id)}
-                            sx={{
-                              color: '#5f6368',
-                              '&.Mui-checked': { color: '#1a73e8' }
-                            }}
-                          />
-                        }
-                        label={
-                          <Tooltip title={permission.description || ''} placement="top">
-                            <Typography sx={{ color: '#5f6368', fontSize: '0.875rem' }}>
-                              {permission.label}
-                            </Typography>
-                          </Tooltip>
-                        }
-                      />
-                    ))}
-                  </Box>
-                )}
-              </Paper>
-              
-              {formErrors.permissions && (
-                <Typography variant="caption" sx={{ color: '#d93025', display: 'block', mt: 0.5, ml: 0 }}>
-                  {formErrors.permissions}
-                </Typography>
-              )}
-            </Box>
+            {/* No parent department field needed */}
           </form>
         </DialogContent>
         
         <DialogActions sx={{ p: 2, pt: 0 }}>
           <Button 
-            onClick={handleCloseRoleModal} 
+            onClick={handleCloseDepartmentModal} 
             sx={{ 
               color: '#5f6368', 
               textTransform: 'none',
@@ -1011,7 +753,7 @@ const Designations = () => {
             Cancel
           </Button>
           <Button 
-            onClick={handleRoleFormSubmit}
+            onClick={handleDepartmentFormSubmit}
             disabled={formLoading}
             variant="contained"
             sx={{ 
@@ -1039,4 +781,4 @@ const Designations = () => {
   );
 };
 
-export default Designations;
+export default Departments;

@@ -6,6 +6,7 @@ import UsersList from './pages/users/UsersList';
 import AddUser from './pages/users/AddUser';
 import RolesPermissions from './pages/users/RolesPermissions';
 import Designations from './pages/users/Designations';
+import OrganizationStructure from './pages/users/OrganizationStructure';
 import AdminSettings from './pages/settings/DirectorSettings'; // Component file name remains the same for now
 import Layout from './components/Layout';
 import './App.css';
@@ -118,10 +119,20 @@ function App() {
           />
           
           <Route 
+            path="/users/organization" 
+            element={
+              <RoleProtectedRoute allowedRoles={['Admin', 'Director']}>
+                <OrganizationStructure />
+              </RoleProtectedRoute>
+            } 
+          />
+          
+          {/* Keep the old route for backward compatibility */}
+          <Route 
             path="/users/designations" 
             element={
               <RoleProtectedRoute allowedRoles={['Admin', 'Director']}>
-                <Designations />
+                <OrganizationStructure />
               </RoleProtectedRoute>
             } 
           />

@@ -13,6 +13,8 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { LeaveManagementModule } from './leave-management/leave-management.module';
 import { RolesModule as AuthRolesModule } from './auth/roles/roles.module';
 import { RolesModule } from './roles.module';
+import { DepartmentsModule } from './departments/departments.module';
+import { DesignationsModule } from './designations/designations.module';
 
 @Module({
   imports: [
@@ -49,6 +51,8 @@ import { RolesModule } from './roles.module';
     AttendanceModule, // Import the AttendanceModule
     LeaveManagementModule, // Import the LeaveManagementModule
     RolesModule, // Import the RolesModule
+    DepartmentsModule, // Import the DepartmentsModule
+    DesignationsModule, // Import the DesignationsModule
   ],
   controllers: [AppController],
   providers: [AppService],

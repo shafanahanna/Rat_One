@@ -339,10 +339,10 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                     {isOpen && <span>User List</span>}
                   </NavLink>
                   
-                  {/* Designations */}
+                  {/* Organization Structure */}
                   {(userRole === "Director" || userRole === "Admin" || hasPermission("designations")) && (
                     <NavLink
-                      to="/users/designations"
+                      to="/users/organization"
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                           isActive
@@ -351,8 +351,8 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                         }`
                       }
                     >
-                      <Shield size={18} />
-                      {isOpen && <span>Designations</span>}
+                      <Building size={18} />
+                      {isOpen && <span>Organization Structure</span>}
                     </NavLink>
                   )}
                 </div>
