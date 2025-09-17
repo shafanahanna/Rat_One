@@ -48,6 +48,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { PERMISSION_UI } from '../../constants/permissions';
 
 const Designations = () => {
   const navigate = useNavigate();
@@ -82,21 +83,42 @@ const Designations = () => {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [selectedRoleId, setSelectedRoleId] = useState(null);
 
-  // Available permissions - updated for HRM system only
-  const availablePermissions = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'users', label: 'User Management' },
-    { id: 'settings', label: 'Settings' },
-    { id: 'hr', label: 'HR Access' },
-    { id: 'employees', label: 'Employee Management' },
-    { id: 'attendance', label: 'Attendance Management' },
-    { id: 'payroll', label: 'Payroll' },
-    { id: 'leave', label: 'Leave Management' }
-  ];
+  // Available permissions state
+  const [availablePermissions, setAvailablePermissions] = useState(PERMISSION_UI);
+  const [loadingPermissions, setLoadingPermissions] = useState(false);
 
   useEffect(() => {
     fetchRoles();
+    fetchPermissions();
   }, []);
+  
+  const fetchPermissions = async () => {
+    setLoadingPermissions(true);
+    try {
+      const token = localStorage.getItem('Admintoken');
+      const response = await axios.get(`${API_URL}/api/permissions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data && response.data.data) {
+        // Transform API response to match our UI format
+        const apiPermissions = response.data.data;
+        const formattedPermissions = apiPermissions.map(perm => ({
+          id: perm.id,
+          label: perm.description || perm.name,
+          description: `${perm.module}: ${perm.description}`
+        }));
+        
+        setAvailablePermissions(formattedPermissions);
+      }
+    } catch (error) {
+      console.error('Error fetching permissions:', error);
+      // Fallback to default permissions if API fails
+      setAvailablePermissions(PERMISSION_UI);
+    } finally {
+      setLoadingPermissions(false);
+    }
+  };
 
   useEffect(() => {
     if (roles.length > 0) {
@@ -195,6 +217,12 @@ const Designations = () => {
       valid = false;
     }
     
+    // Trim any trailing spaces from the role name
+    // This prevents issues with the backend expecting exact role names
+    if (roleFormData.name) {
+      roleFormData.name = roleFormData.name.trim();
+    }
+    
     // Validate permissions
     if (roleFormData.permissions.length === 0) {
       newErrors.permissions = 'At least one permission must be selected';
@@ -262,6 +290,12 @@ const Designations = () => {
       return;
     }
     
+    // Ensure role name is properly trimmed
+    const formData = {
+      ...roleFormData,
+      name: roleFormData.name.trim()
+    };
+    
     setFormLoading(true);
     
     try {
@@ -269,19 +303,19 @@ const Designations = () => {
       
       if (isEditMode) {
         await axios.put(
-          `${API_URL}/api/roles/${roleFormData.id}`,
-          roleFormData,
+          `${API_URL}/api/roles/${formData.id}`,
+          formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
         // Update role in the list
         setRoles(roles.map(role => 
-          role.id === roleFormData.id ? { ...role, ...roleFormData } : role
+          role.id === formData.id ? { ...role, ...formData } : role
         ));
       } else {
         const response = await axios.post(
           `${API_URL}/api/roles`,
-          roleFormData,
+          formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
@@ -830,30 +864,42 @@ const Designations = () => {
                 variant="outlined" 
                 sx={{ 
                   p: 2, 
-                  maxHeight: '200px', 
+                  maxHeight: '300px', 
                   overflowY: 'auto',
                   borderColor: formErrors.permissions ? '#d93025' : '#dadce0',
                   borderRadius: '4px'
                 }}
               >
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
-                  {availablePermissions.map((permission) => (
-                    <FormControlLabel
-                      key={permission.id}
-                      control={
-                        <Checkbox
-                          checked={roleFormData.permissions.includes(permission.id)}
-                          onChange={() => handlePermissionChange(permission.id)}
-                          sx={{
-                            color: '#5f6368',
-                            '&.Mui-checked': { color: '#1a73e8' }
-                          }}
-                        />
-                      }
-                      label={<Typography sx={{ color: '#5f6368', fontSize: '0.875rem' }}>{permission.label}</Typography>}
-                    />
-                  ))}
-                </Box>
+                {loadingPermissions ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                    <CircularProgress size={24} sx={{ color: '#1a73e8' }} />
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
+                    {availablePermissions.map((permission) => (
+                      <FormControlLabel
+                        key={permission.id}
+                        control={
+                          <Checkbox
+                            checked={roleFormData.permissions.includes(permission.id)}
+                            onChange={() => handlePermissionChange(permission.id)}
+                            sx={{
+                              color: '#5f6368',
+                              '&.Mui-checked': { color: '#1a73e8' }
+                            }}
+                          />
+                        }
+                        label={
+                          <Tooltip title={permission.description || ''} placement="top">
+                            <Typography sx={{ color: '#5f6368', fontSize: '0.875rem' }}>
+                              {permission.label}
+                            </Typography>
+                          </Tooltip>
+                        }
+                      />
+                    ))}
+                  </Box>
+                )}
               </Paper>
               
               {formErrors.permissions && (

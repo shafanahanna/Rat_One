@@ -203,7 +203,7 @@ let UserService = class UserService {
       FROM users u
       LEFT JOIN branches b ON u.branch_id::text = b.id::text
       WHERE u.employee_id IS NULL
-      AND u.role != 'Director'
+      AND u.role NOT IN ('Admin', 'Director') -- Exclude both Admin and Director for backward compatibility
       ORDER BY u.username ASC
     `;
         const users = await this.dataSource.query(query);

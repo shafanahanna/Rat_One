@@ -17,19 +17,14 @@ const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../jwt-auth.guard");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
-const register_dto_1 = require("../dto/register.dto");
 const users_service_1 = require("./users.service");
+const permissions_decorator_1 = require("../decorators/permissions.decorator");
+const permission_guard_1 = require("../guards/permission.guard");
 let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
     }
-    async getAllUsers(req) {
-        if (req.user.role !== register_dto_1.UserRole.DIRECTOR) {
-            throw new common_1.HttpException({
-                status: "Error",
-                message: "Only Director can access user management"
-            }, common_1.HttpStatus.FORBIDDEN);
-        }
+    async getAllUsers() {
         try {
             const users = await this.usersService.findAll();
             return {
@@ -46,13 +41,7 @@ let UsersController = class UsersController {
             }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async addUser(req, createUserDto) {
-        if (req.user.role !== register_dto_1.UserRole.DIRECTOR) {
-            throw new common_1.HttpException({
-                status: "Error",
-                message: "You do not have permission to perform this action."
-            }, common_1.HttpStatus.FORBIDDEN);
-        }
+    async addUser(createUserDto) {
         try {
             const newUser = await this.usersService.create(createUserDto);
             return {
@@ -75,14 +64,7 @@ let UsersController = class UsersController {
             }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async getUser(req, id) {
-        const isSelf = req.user.id === id;
-        if (req.user.role !== register_dto_1.UserRole.DIRECTOR) {
-            throw new common_1.HttpException({
-                status: "Error",
-                message: "You do not have permission to access this user."
-            }, common_1.HttpStatus.FORBIDDEN);
-        }
+    async getUser(id) {
         try {
             const user = await this.usersService.findOne(id);
             return {
@@ -99,20 +81,7 @@ let UsersController = class UsersController {
             }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async updateUser(req, id, updateUserDto) {
-        const isSelf = req.user.id === id;
-        if (updateUserDto.role && req.user.role !== register_dto_1.UserRole.DIRECTOR) {
-            throw new common_1.HttpException({
-                status: "Error",
-                message: "Only Director can change user roles."
-            }, common_1.HttpStatus.FORBIDDEN);
-        }
-        if (req.user.role !== register_dto_1.UserRole.DIRECTOR && !isSelf) {
-            throw new common_1.HttpException({
-                status: "Error",
-                message: "You do not have permission to update this user."
-            }, common_1.HttpStatus.FORBIDDEN);
-        }
+    async updateUser(id, updateUserDto) {
         try {
             const updatedUser = await this.usersService.update(id, updateUserDto);
             return {
@@ -135,13 +104,7 @@ let UsersController = class UsersController {
             }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async deleteUser(req, id) {
-        if (req.user.role !== register_dto_1.UserRole.DIRECTOR) {
-            throw new common_1.HttpException({
-                status: "Error",
-                message: "Only Director can delete users."
-            }, common_1.HttpStatus.FORBIDDEN);
-        }
+    async deleteUser(id) {
         try {
             await this.usersService.remove(id);
             return {
@@ -157,14 +120,7 @@ let UsersController = class UsersController {
             }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async getUnassignedUsers(req) {
-        const allowedRoles = [register_dto_1.UserRole.DIRECTOR, register_dto_1.UserRole.HR];
-        if (!allowedRoles.includes(req.user.role)) {
-            throw new common_1.HttpException({
-                status: "Error",
-                message: "Only Director, HR, or superuser can access unassigned users"
-            }, common_1.HttpStatus.FORBIDDEN);
-        }
+    async getUnassignedUsers() {
         try {
             const users = await this.usersService.getUnassignedUsers();
             return {
@@ -184,56 +140,56 @@ let UsersController = class UsersController {
 };
 exports.UsersController = UsersController;
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permission_guard_1.PermissionGuard),
+    (0, permissions_decorator_1.Permissions)('users.view'),
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getAllUsers", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permission_guard_1.PermissionGuard),
+    (0, permissions_decorator_1.Permissions)('users.create'),
     (0, common_1.Post)(),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, create_user_dto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "addUser", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permission_guard_1.PermissionGuard),
+    (0, permissions_decorator_1.Permissions)('users.view'),
     (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getUser", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permission_guard_1.PermissionGuard),
+    (0, permissions_decorator_1.Permissions)('users.edit'),
     (0, common_1.Put)(':id'),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id')),
-    __param(2, (0, common_1.Body)()),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, update_user_dto_1.UpdateUserDto]),
+    __metadata("design:paramtypes", [String, update_user_dto_1.UpdateUserDto]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateUser", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permission_guard_1.PermissionGuard),
+    (0, permissions_decorator_1.Permissions)('users.delete'),
     (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "deleteUser", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permission_guard_1.PermissionGuard),
+    (0, permissions_decorator_1.Permissions)(['users', 'hr']),
     (0, common_1.Get)('unassigned'),
-    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getUnassignedUsers", null);
 exports.UsersController = UsersController = __decorate([

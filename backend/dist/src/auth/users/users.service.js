@@ -122,7 +122,7 @@ let UsersService = class UsersService {
       WHERE NOT EXISTS (
         SELECT 1 FROM employees e WHERE e.user_id = u.id
       )
-      AND u.role != 'Director'
+      AND u.role NOT IN ('Director', 'Admin')
       -- Removed the employee_id IS NULL condition since it might be filtering out valid users
       ORDER BY u.username
     `;

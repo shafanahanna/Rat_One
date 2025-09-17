@@ -2,23 +2,18 @@ import { Controller, Get, Post, Body, UseGuards, Req, HttpStatus, HttpException,
 import { JwtAuthGuard } from '../jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole } from '../dto/register.dto';
 import { UsersService } from './users.service';
+import { Permissions } from '../decorators/permissions.decorator';
+import { PermissionGuard } from '../guards/permission.guard';
 
 @Controller('api/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @Permissions('users.view')
   @Get()
-  async getAllUsers(@Req() req) {
-    if (req.user.role !== UserRole.DIRECTOR) {
-      throw new HttpException({
-        status: "Error",
-        message: "Only Director can access user management"
-      }, HttpStatus.FORBIDDEN);
-    }
-    
+  async getAllUsers() {
     try {
       const users = await this.usersService.findAll();
       return {
@@ -35,16 +30,10 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @Permissions('users.create')
   @Post()
-  async addUser(@Req() req, @Body() createUserDto: CreateUserDto) {
-    if (req.user.role !== UserRole.DIRECTOR) {
-      throw new HttpException({
-        status: "Error",
-        message: "You do not have permission to perform this action."
-      }, HttpStatus.FORBIDDEN);
-    }
-    
+  async addUser(@Body() createUserDto: CreateUserDto) {
     try {
       const newUser = await this.usersService.create(createUserDto);
       return {
@@ -70,18 +59,10 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @Permissions('users.view')
   @Get(':id')
-  async getUser(@Req() req, @Param('id') id: string) {
-    const isSelf = req.user.id === id;
-    
-    if (req.user.role !== UserRole.DIRECTOR ) {
-      throw new HttpException({
-        status: "Error",
-        message: "You do not have permission to access this user."
-      }, HttpStatus.FORBIDDEN);
-    }
-    
+  async getUser(@Param('id') id: string) {
     try {
       const user = await this.usersService.findOne(id);
       return {
@@ -98,26 +79,10 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @Permissions('users.edit')
   @Put(':id')
-  async updateUser(@Req() req, @Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    const isSelf = req.user.id === id;
-    
-    // Only allow role changes by Director
-    if (updateUserDto.role && req.user.role !== UserRole.DIRECTOR) {
-      throw new HttpException({
-        status: "Error",
-        message: "Only Director can change user roles."
-      }, HttpStatus.FORBIDDEN);
-    }
-    
-    if (req.user.role !== UserRole.DIRECTOR && !isSelf) {
-      throw new HttpException({
-        status: "Error",
-        message: "You do not have permission to update this user."
-      }, HttpStatus.FORBIDDEN);
-    }
-    
+  async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     try {
       const updatedUser = await this.usersService.update(id, updateUserDto);
       return {
@@ -143,16 +108,10 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @Permissions('users.delete')
   @Delete(':id')
-  async deleteUser(@Req() req, @Param('id') id: string) {
-    if (req.user.role !== UserRole.DIRECTOR) {
-      throw new HttpException({
-        status: "Error",
-        message: "Only Director can delete users."
-      }, HttpStatus.FORBIDDEN);
-    }
-    
+  async deleteUser(@Param('id') id: string) {
     try {
       await this.usersService.remove(id);
       return {
@@ -168,19 +127,10 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @Permissions(['users', 'hr']) // User needs either 'users' OR 'hr' permission
   @Get('unassigned')
-  async getUnassignedUsers(@Req() req) {
-    // Check if user has appropriate role (Director, HR) or is superuser
-    const allowedRoles = [UserRole.DIRECTOR, UserRole.HR];
-    
-    if (!allowedRoles.includes(req.user.role) ) {
-      throw new HttpException({
-        status: "Error",
-        message: "Only Director, HR, or superuser can access unassigned users"
-      }, HttpStatus.FORBIDDEN);
-    }
-    
+  async getUnassignedUsers() {
     try {
       const users = await this.usersService.getUnassignedUsers();
       return {

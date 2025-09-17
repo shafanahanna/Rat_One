@@ -18,21 +18,31 @@ import {
   Box,
   CircularProgress,
   Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-  FormLabel,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogActions
+  DialogActions,
+  Card,
+  CardContent,
+  Tooltip,
+  Menu,
+  MenuItem,
+  Fade,
+  Avatar
 } from '@mui/material';
-import { Search, Edit, Delete, UserPlus, RefreshCw, Save } from 'lucide-react';
+import { 
+  Search, 
+  Edit, 
+  Delete, 
+  UserPlus, 
+  RefreshCw, 
+  Save, 
+  MoreVertical, 
+  Info,
+  CheckCircle,
+  User
+} from 'lucide-react';
 import userService from '../../services/userService';
 import roleService from '../../services/roleService';
 import { useNavigate } from 'react-router-dom';
@@ -74,6 +84,8 @@ const UsersList = () => {
   });
   const [formSuccess, setFormSuccess] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -315,51 +327,125 @@ const UsersList = () => {
     setUserModalOpen(false);
   };
 
+  const handleMenuOpen = (event, userId) => {
+    setMenuAnchorEl(event.currentTarget);
+    setSelectedUserId(userId);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setSelectedUserId(null);
+  };
+
+  const handleMenuEdit = () => {
+    handleEditUser(selectedUserId);
+    handleMenuClose();
+  };
+
+  const handleMenuDelete = () => {
+    const userToDelete = users.find(user => user.id === selectedUserId);
+    if (userToDelete) {
+      setUserToDelete(userToDelete);
+      setDeleteDialogOpen(true);
+    }
+    handleMenuClose();
+  };
+
   return (
-    <Container maxWidth="xl" className="py-6">
-      <Box className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <Typography variant="h5" component="h1" className="font-bold text-gray-800">
-          User Management
-        </Typography>
-        <Box className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <TextField
-            placeholder="Search users..."
-            variant="outlined"
-            size="small"
-            fullWidth
-            className="sm:w-64"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search size={20} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<UserPlus size={18} />}
-            onClick={handleAddUser}
-            className="whitespace-nowrap"
-          >
-            Add User
-          </Button>
-          <IconButton onClick={fetchUsers} color="default" className="ml-1">
-            <RefreshCw size={20} />
-          </IconButton>
-        </Box>
-      </Box>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Card elevation={0} sx={{ mb: 3, borderRadius: '16px', overflow: 'visible' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, mb: 2 }}>
+            <Typography 
+              variant="h5" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 500, 
+                color: '#202124',
+                fontSize: '1.5rem',
+                mb: { xs: 2, md: 0 }
+              }}
+            >
+              User Management
+            </Typography>
+            
+            <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', md: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
+              <TextField
+                placeholder="Search users..."
+                variant="outlined"
+                size="small"
+                fullWidth
+                sx={{ 
+                  width: { sm: '250px' },
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '24px',
+                    '& fieldset': { borderColor: '#dadce0' },
+                    '&:hover fieldset': { borderColor: '#bdc1c6' },
+                    '&.Mui-focused fieldset': { borderColor: '#1a73e8' }
+                  }
+                }}
+                value={searchTerm}
+                onChange={handleSearchChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search size={18} color="#5f6368" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                variant="contained"
+                sx={{ 
+                  bgcolor: '#1a73e8', 
+                  borderRadius: '24px',
+                  textTransform: 'none',
+                  boxShadow: 'none',
+                  '&:hover': { bgcolor: '#1765cc', boxShadow: '0 1px 3px 0 rgba(60,64,67,0.3)' }
+                }}
+                startIcon={<UserPlus size={16} />}
+                onClick={handleAddUser}
+              >
+                Add User
+              </Button>
+              <Tooltip title="Refresh">
+                <IconButton 
+                  onClick={fetchUsers} 
+                  sx={{ 
+                    bgcolor: '#f1f3f4', 
+                    borderRadius: '50%',
+                    '&:hover': { bgcolor: '#e8eaed' }
+                  }}
+                >
+                  <RefreshCw size={18} color="#5f6368" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
 
-      {error && (
-        <Alert severity="error" className="mb-4">
-          {error}
-        </Alert>
-      )}
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mt: 2, 
+                borderRadius: '8px',
+                '& .MuiAlert-icon': { color: '#d93025' }
+              }}
+            >
+              {error}
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
-      <Paper className="shadow-sm">
+      <Card 
+        elevation={0} 
+        sx={{ 
+          borderRadius: '16px', 
+          overflow: 'hidden',
+          border: '1px solid #dadce0' 
+        }}
+      >
         {loading ? (
           <Box className="flex justify-center items-center p-8">
             <CircularProgress />
@@ -370,11 +456,47 @@ const UsersList = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Designation</TableCell>
-                   
-                    <TableCell align="right">Actions</TableCell>
+                    <TableCell 
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: '#5f6368', 
+                        borderBottom: '1px solid #e0e0e0',
+                        py: 2
+                      }}
+                    >
+                      Name
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: '#5f6368', 
+                        borderBottom: '1px solid #e0e0e0',
+                        py: 2
+                      }}
+                    >
+                      Email
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: '#5f6368', 
+                        borderBottom: '1px solid #e0e0e0',
+                        py: 2
+                      }}
+                    >
+                      Designation
+                    </TableCell>
+                    <TableCell 
+                      align="right"
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: '#5f6368', 
+                        borderBottom: '1px solid #e0e0e0',
+                        py: 2
+                      }}
+                    >
+                      Actions
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -382,48 +504,84 @@ const UsersList = () => {
                     filteredUsers
                       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                       .map((user) => (
-                        <TableRow key={user.id} hover>
-                          <TableCell>{user.name}</TableCell>
-                          <TableCell>{user.email}</TableCell>
+                        <TableRow 
+                          key={user.id} 
+                          hover
+                          sx={{ 
+                            '&:hover': { bgcolor: '#f8f9fa' },
+                            '& td': { borderBottom: '1px solid #e0e0e0', py: 2 }
+                          }}
+                        >
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Avatar 
+                                sx={{ 
+                                  width: 32, 
+                                  height: 32, 
+                                  bgcolor: '#e8f0fe', 
+                                  color: '#1a73e8',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 500,
+                                  mr: 1.5
+                                }}
+                              >
+                                {user.name.charAt(0).toUpperCase()}
+                              </Avatar>
+                              <Typography sx={{ color: '#202124', fontWeight: 500 }}>
+                                {user.name}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={{ color: '#5f6368' }}>{user.email}</TableCell>
                           <TableCell>
                             <Chip 
                               label={user.role} 
                               size="small" 
-                              color={
-                                user.role === 'Director' ? 'primary' : 
-                                user.role === 'HR' ? 'secondary' : 
-                                customRoles.some(role => role.name === user.role) ? 'success' :
-                                'default'
-                              }
-                              variant={user.role === 'DM' || user.role === 'TC' || user.role === 'BA' || user.role === 'RT' || user.role === 'AC' ? 'outlined' : 
-                                      customRoles.some(role => role.name === user.role) ? 'outlined' : 'filled'}
+                              sx={{ 
+                                bgcolor: 
+                                  user.role === 'Admin' || user.role === 'Director' ? '#e8f0fe' : 
+                                  user.role === 'HR' ? '#fce8e6' :
+                                  '#e6f4ea',
+                                color: 
+                                  user.role === 'Admin' || user.role === 'Director' ? '#1a73e8' : 
+                                  user.role === 'HR' ? '#d93025' :
+                                  '#1e8e3e',
+                                borderRadius: '16px',
+                                '& .MuiChip-label': { px: 1.5 },
+                                fontSize: '0.75rem',
+                                height: '24px'
+                              }}
                             />
                           </TableCell>
                           
                           <TableCell align="right">
-                            <IconButton 
-                              size="small" 
-                              color="primary"
-                              onClick={() => handleEditUser(user.id)}
-                            >
-                              <Edit size={18} />
-                            </IconButton>
-                            <IconButton 
-                              size="small" 
-                              color="error"
-                              onClick={() => handleDeleteClick(user)}
-                            >
-                              <Delete size={18} />
-                            </IconButton>
+                            <Tooltip title="More actions">
+                              <IconButton 
+                                size="small"
+                                onClick={(e) => handleMenuOpen(e, user.id)}
+                                sx={{ 
+                                  color: '#5f6368',
+                                  '&:hover': { bgcolor: '#f1f3f4' }
+                                }}
+                              >
+                                <MoreVertical size={18} />
+                              </IconButton>
+                            </Tooltip>
                           </TableCell>
                         </TableRow>
                       ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} align="center" className="py-8">
-                        <Typography variant="body1" color="textSecondary">
-                          No users found
-                        </Typography>
+                      <TableCell colSpan={4} sx={{ textAlign: 'center', py: 6 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                          <Info size={40} color="#80868b" />
+                          <Typography sx={{ color: '#5f6368', mt: 1 }}>
+                            No users found
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#80868b' }}>
+                            Add a new user to get started
+                          </Typography>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   )}
@@ -438,251 +596,371 @@ const UsersList = () => {
               page={page}
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
+              sx={{
+                borderTop: '1px solid #e0e0e0',
+                '.MuiTablePagination-select': {
+                  borderRadius: '4px',
+                  '&:focus': { bgcolor: '#f1f3f4' }
+                },
+                '.MuiTablePagination-selectIcon': { color: '#5f6368' },
+                '.MuiTablePagination-displayedRows': { color: '#5f6368' },
+                '.MuiTablePagination-actions': {
+                  '& .MuiIconButton-root': {
+                    color: '#5f6368',
+                    '&:hover': { bgcolor: '#f1f3f4' },
+                    '&.Mui-disabled': { color: '#dadce0' }
+                  }
+                }
+              }}
             />
           </>
         )}
-      </Paper>
+      </Card>
+
+      {/* Action Menu */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        TransitionComponent={Fade}
+        elevation={2}
+        sx={{
+          '& .MuiPaper-root': {
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(60,64,67,.3)',
+            mt: 0.5
+          },
+          '& .MuiMenuItem-root': {
+            fontSize: '0.875rem',
+            py: 1,
+            px: 2,
+            '&:hover': { bgcolor: '#f1f3f4' }
+          }
+        }}
+      >
+        <MenuItem onClick={handleMenuEdit}>
+          <Edit size={16} style={{ marginRight: 8, color: '#5f6368' }} />
+          Edit
+        </MenuItem>
+        <MenuItem onClick={handleMenuDelete} sx={{ color: '#d93025' }}>
+          <Delete size={16} style={{ marginRight: 8 }} />
+          Delete
+        </MenuItem>
+      </Menu>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteCancel}
+        PaperProps={{
+          sx: {
+            borderRadius: '8px',
+            boxShadow: '0 24px 38px 3px rgba(60,64,67,0.14), 0 9px 46px 8px rgba(60,64,67,0.12), 0 11px 15px -7px rgba(60,64,67,0.2)',
+            maxWidth: '400px'
+          }
+        }}
       >
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle sx={{ pb: 1, fontWeight: 500, color: '#202124' }}>
+          Delete user
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete user {userToDelete?.name}? This action cannot be undone.
+          <DialogContentText sx={{ color: '#5f6368' }}>
+            Are you sure you want to delete the user "{userToDelete?.name}"? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} color="primary">
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button 
+            onClick={handleDeleteCancel} 
+            sx={{ 
+              color: '#5f6368', 
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#f1f3f4' }
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+          <Button 
+            onClick={handleDeleteConfirm} 
+            variant="contained"
+            sx={{ 
+              bgcolor: '#d93025', 
+              color: 'white',
+              textTransform: 'none',
+              boxShadow: 'none',
+              '&:hover': { bgcolor: '#c5221f', boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }
+            }}
+          >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* User Add/Edit Modal */}
-      {userModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
-                {isEditMode ? 'Edit User' : 'Add New User'}
-              </h3>
-            </div>
+      <Dialog
+        open={userModalOpen}
+        onClose={handleCloseUserModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '8px',
+            boxShadow: '0 24px 38px 3px rgba(60,64,67,0.14), 0 9px 46px 8px rgba(60,64,67,0.12), 0 11px 15px -7px rgba(60,64,67,0.2)',
+            overflow: 'visible'
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1, fontWeight: 500, color: '#202124' }}>
+          {isEditMode ? 'Edit User' : 'Create User'}
+        </DialogTitle>
+        
+        <DialogContent sx={{ pt: 2 }}>
+          {formSuccess && (
+            <Alert 
+              severity="success" 
+              icon={<CheckCircle size={20} />}
+              sx={{ 
+                mb: 2, 
+                borderRadius: '8px',
+                bgcolor: '#e6f4ea',
+                color: '#1e8e3e',
+                '& .MuiAlert-icon': { color: '#1e8e3e' }
+              }}
+            >
+              User {isEditMode ? 'updated' : 'created'} successfully!
+            </Alert>
+          )}
 
-            {formSuccess && (
-              <div className="px-6 pt-4">
-                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-                  User {isEditMode ? 'updated' : 'created'} successfully!
-                </div>
-              </div>
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 2, 
+                borderRadius: '8px',
+                '& .MuiAlert-icon': { color: '#d93025' }
+              }}
+            >
+              {error}
+            </Alert>
+          )}
+
+          <form onSubmit={handleUserFormSubmit}>
+            <TextField
+              label="Full Name"
+              id="name"
+              name="name"
+              value={userFormData.name}
+              onChange={handleInputChange}
+              placeholder="John Doe"
+              fullWidth
+              margin="normal"
+              error={!!formErrors.name}
+              helperText={formErrors.name}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '4px',
+                  '& fieldset': { borderColor: formErrors.name ? '#d93025' : '#dadce0' },
+                  '&:hover fieldset': { borderColor: formErrors.name ? '#d93025' : '#bdc1c6' },
+                  '&.Mui-focused fieldset': { borderColor: formErrors.name ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormLabel-root': {
+                  color: formErrors.name ? '#d93025' : '#5f6368',
+                  '&.Mui-focused': { color: formErrors.name ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormHelperText-root': {
+                  color: '#d93025',
+                  marginLeft: 0
+                }
+              }}
+            />
+
+            <TextField
+              label="Email Address"
+              id="email"
+              name="email"
+              type="email"
+              value={userFormData.email}
+              onChange={handleInputChange}
+              placeholder="user@example.com"
+              fullWidth
+              margin="normal"
+              error={!!formErrors.email}
+              helperText={formErrors.email}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '4px',
+                  '& fieldset': { borderColor: formErrors.email ? '#d93025' : '#dadce0' },
+                  '&:hover fieldset': { borderColor: formErrors.email ? '#d93025' : '#bdc1c6' },
+                  '&.Mui-focused fieldset': { borderColor: formErrors.email ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormLabel-root': {
+                  color: formErrors.email ? '#d93025' : '#5f6368',
+                  '&.Mui-focused': { color: formErrors.email ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormHelperText-root': {
+                  color: '#d93025',
+                  marginLeft: 0
+                }
+              }}
+            />
+
+            <TextField
+              label={`Password ${isEditMode ? '(Leave blank to keep current)' : ''}`}
+              id="password"
+              name="password"
+              type="password"
+              value={userFormData.password}
+              onChange={handleInputChange}
+              placeholder="••••••••"
+              fullWidth
+              margin="normal"
+              required={!isEditMode}
+              error={!!formErrors.password}
+              helperText={formErrors.password}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '4px',
+                  '& fieldset': { borderColor: formErrors.password ? '#d93025' : '#dadce0' },
+                  '&:hover fieldset': { borderColor: formErrors.password ? '#d93025' : '#bdc1c6' },
+                  '&.Mui-focused fieldset': { borderColor: formErrors.password ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormLabel-root': {
+                  color: formErrors.password ? '#d93025' : '#5f6368',
+                  '&.Mui-focused': { color: formErrors.password ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormHelperText-root': {
+                  color: '#d93025',
+                  marginLeft: 0
+                }
+              }}
+            />
+
+            <TextField
+              label="Confirm Password"
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              value={userFormData.confirmPassword}
+              onChange={handleInputChange}
+              placeholder="••••••••"
+              fullWidth
+              margin="normal"
+              required={!isEditMode}
+              error={!!formErrors.confirmPassword}
+              helperText={formErrors.confirmPassword}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '4px',
+                  '& fieldset': { borderColor: formErrors.confirmPassword ? '#d93025' : '#dadce0' },
+                  '&:hover fieldset': { borderColor: formErrors.confirmPassword ? '#d93025' : '#bdc1c6' },
+                  '&.Mui-focused fieldset': { borderColor: formErrors.confirmPassword ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormLabel-root': {
+                  color: formErrors.confirmPassword ? '#d93025' : '#5f6368',
+                  '&.Mui-focused': { color: formErrors.confirmPassword ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormHelperText-root': {
+                  color: '#d93025',
+                  marginLeft: 0
+                }
+              }}
+            />
+
+            <TextField
+              select
+              label="Designation"
+              id="role"
+              name="role"
+              value={userFormData.role}
+              onChange={handleInputChange}
+              fullWidth
+              margin="normal"
+              error={!!formErrors.role}
+              helperText={formErrors.role || (loadingRoles ? 'Loading custom roles...' : '')}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '4px',
+                  '& fieldset': { borderColor: formErrors.role ? '#d93025' : '#dadce0' },
+                  '&:hover fieldset': { borderColor: formErrors.role ? '#d93025' : '#bdc1c6' },
+                  '&.Mui-focused fieldset': { borderColor: formErrors.role ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormLabel-root': {
+                  color: formErrors.role ? '#d93025' : '#5f6368',
+                  '&.Mui-focused': { color: formErrors.role ? '#d93025' : '#1a73e8' }
+                },
+                '& .MuiFormHelperText-root': {
+                  color: formErrors.role ? '#d93025' : (loadingRoles ? '#1a73e8' : '#5f6368'),
+                  marginLeft: 0
+                }
+              }}
+            >
+              <MenuItem value="" disabled>
+                Select a designation
+              </MenuItem>
+              {/* Legacy roles */}
+              <MenuItem value="Admin" sx={{ color: '#1a73e8', fontWeight: 500 }}>
+                Admin
+              </MenuItem>
+              <MenuItem value="HR" sx={{ color: '#d93025', fontWeight: 500 }}>
+                HR
+              </MenuItem>
+              {/* Custom roles */}
+              {customRoles.map(role => (
+                <MenuItem 
+                  key={role.id} 
+                  value={role.name} 
+                  sx={{ 
+                    color: '#202124',
+                    '&:hover': { bgcolor: '#f8f9fa' }
+                  }}
+                >
+                  {role.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </form>
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button 
+            onClick={handleCloseUserModal} 
+            sx={{ 
+              color: '#5f6368', 
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#f1f3f4' }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleUserFormSubmit}
+            disabled={formLoading}
+            variant="contained"
+            sx={{ 
+              bgcolor: '#1a73e8', 
+              color: 'white',
+              textTransform: 'none',
+              boxShadow: 'none',
+              '&:hover': { bgcolor: '#1765cc', boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' },
+              '&.Mui-disabled': { bgcolor: '#dadce0', color: '#5f6368' }
+            }}
+            startIcon={formLoading ? (
+              <CircularProgress size={16} sx={{ color: 'white' }} />
+            ) : (
+              <Save size={16} />
             )}
-
-            {error && (
-              <div className="px-6 pt-4">
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                  {error}
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleUserFormSubmit} className="px-6 py-4">
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="name"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={userFormData.name}
-                  onChange={handleInputChange}
-                  className={`shadow appearance-none border ${
-                    formErrors.name ? "border-red-500" : "border-gray-300"
-                  } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
-                  placeholder="Full Name"
-                />
-                {formErrors.name && (
-                  <p className="text-red-500 text-xs italic mt-1">
-                    {formErrors.name}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="email"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={userFormData.email}
-                  onChange={handleInputChange}
-                  className={`shadow appearance-none border ${
-                    formErrors.email ? "border-red-500" : "border-gray-300"
-                  } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
-                  placeholder="user@example.com"
-                />
-                {formErrors.email && (
-                  <p className="text-red-500 text-xs italic mt-1">
-                    {formErrors.email}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="password"
-                >
-                  Password {isEditMode && <span className="font-normal text-xs">(Leave blank to keep current)</span>}
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={userFormData.password}
-                  onChange={handleInputChange}
-                  className={`shadow appearance-none border ${
-                    formErrors.password ? "border-red-500" : "border-gray-300"
-                  } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
-                  placeholder="••••••••"
-                  required={!isEditMode}
-                />
-                {formErrors.password && (
-                  <p className="text-red-500 text-xs italic mt-1">
-                    {formErrors.password}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="confirmPassword"
-                >
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={userFormData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={`shadow appearance-none border ${
-                    formErrors.confirmPassword ? "border-red-500" : "border-gray-300"
-                  } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
-                  placeholder="••••••••"
-                  required={!isEditMode}
-                />
-                {formErrors.confirmPassword && (
-                  <p className="text-red-500 text-xs italic mt-1">
-                    {formErrors.confirmPassword}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="role"
-                >
-                  Designation
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={userFormData.role}
-                  onChange={handleInputChange}
-                  className={`shadow appearance-none border ${
-                    formErrors.role ? "border-red-500" : "border-gray-300"
-                  } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
-                >
-                  <option value="">Select a designation</option>
-                  <optgroup label="System Designations">
-                    <option value="Director">Admin</option>
-                    
-                  </optgroup>
-                  
-                  {customRoles.length > 0 && (
-                    <optgroup label="Custom Designations">
-                      {customRoles.map(role => (
-                        <option key={role.id} value={role.name}>
-                          {role.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-                {loadingRoles && (
-                  <p className="text-blue-500 text-xs mt-1">
-                    Loading custom roles...
-                  </p>
-                )}
-                {formErrors.role && (
-                  <p className="text-red-500 text-xs italic mt-1">
-                    {formErrors.role}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-end border-t border-gray-200 pt-4">
-                <button
-                  type="button"
-                  onClick={handleCloseUserModal}
-                  className="bg-white hover:bg-gray-100 text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md shadow-sm mr-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-[#47BCCB] hover:bg-[#3da7b4] text-white font-semibold py-2 px-4 rounded-md shadow-sm flex items-center"
-                  disabled={formLoading}
-                >
-                  {formLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      {isEditMode ? 'Updating...' : 'Adding...'}
-                    </>
-                  ) : (
-                    isEditMode ? "Update User" : "Add User"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          >
+            {formLoading ? 
+              (isEditMode ? 'Updating...' : 'Creating...') : 
+              (isEditMode ? 'Update' : 'Create')
+            }
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

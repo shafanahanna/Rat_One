@@ -1,11 +1,9 @@
-import { UserRole } from '../../auth/dto/register.dto';
-
 export class UserWithContextDto {
   // User properties
   id: string;
   username: string;
   email: string;
-  role: UserRole;
+  role: string;
   employee_id: string | null;
   branch_id: string | null;
   created_at: Date;

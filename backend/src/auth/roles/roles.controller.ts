@@ -3,17 +3,17 @@ import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { Roles } from '../decorators/roles.decorator';
-import { RolesGuard } from '../guards/roles.guard';
-import { UserRole } from '../dto/register.dto';
+import { PermissionGuard } from '../guards/permission.guard';
+import { Permissions } from '../decorators/permissions.decorator';
 
 @Controller('api/roles')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Post()
-  @Roles(UserRole.DIRECTOR)
+  @UseGuards(PermissionGuard)
+  @Permissions('roles.create')
   async create(@Body() createRoleDto: CreateRoleDto) {
     const role = await this.rolesService.create(createRoleDto);
     return {
@@ -24,7 +24,8 @@ export class RolesController {
   }
 
   @Get()
-  @Roles(UserRole.DIRECTOR)
+  @UseGuards(PermissionGuard)
+  @Permissions('roles')
   async findAll() {
     const roles = await this.rolesService.findAll();
     return {
@@ -34,7 +35,8 @@ export class RolesController {
   }
 
   @Get(':id')
-  @Roles(UserRole.DIRECTOR)
+  @UseGuards(PermissionGuard)
+  @Permissions('roles')
   async findOne(@Param('id') id: string) {
     const role = await this.rolesService.findOne(id);
     return {
@@ -44,7 +46,8 @@ export class RolesController {
   }
 
   @Put(':id')
-  @Roles(UserRole.DIRECTOR)
+  @UseGuards(PermissionGuard)
+  @Permissions('roles.edit')
   async update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
     const role = await this.rolesService.update(id, updateRoleDto);
     return {
@@ -55,7 +58,8 @@ export class RolesController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.DIRECTOR)
+  @UseGuards(PermissionGuard)
+  @Permissions('roles.delete')
   async remove(@Param('id') id: string) {
     await this.rolesService.remove(id);
     return {

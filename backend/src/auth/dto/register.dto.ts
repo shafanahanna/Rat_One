@@ -1,14 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
-
-export enum UserRole {
-  DIRECTOR = 'Director',
-  HR = 'HR',
-  DM = 'DM',
-  TC = 'TC',
-  BA = 'BA',
-  RT = 'RT',
-  AC = 'AC'
-}
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @IsString()
@@ -23,7 +13,7 @@ export class RegisterDto {
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
   password_hash: string;
 
+  @IsString()
   @IsNotEmpty({ message: 'Role is required' })
-  @IsEnum(UserRole, { message: 'Role must be one of: Director, HR, DM, TC, BA, RT, AC' })
-  role: UserRole;
+  role: string;
 }

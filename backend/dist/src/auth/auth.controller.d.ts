@@ -12,7 +12,7 @@ export declare class AuthController {
             id: string;
             username: string;
             email: string;
-            role: import("./dto/register.dto").UserRole;
+            role: string;
             employee_id: string;
             country_id: string;
             branch_id: string;

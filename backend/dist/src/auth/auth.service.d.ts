@@ -5,11 +5,13 @@ import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { RegisterDto } from './dto/register.dto';
 import { User } from './entities/user.entity';
+import { RolesService } from './roles/roles.service';
 export declare class AuthService {
     private readonly jwtService;
     private readonly dbService;
     private userRepository;
-    constructor(jwtService: JwtService, dbService: DatabaseService, userRepository: Repository<User>);
+    private readonly rolesService;
+    constructor(jwtService: JwtService, dbService: DatabaseService, userRepository: Repository<User>, rolesService: RolesService);
     private readonly UUID_REGEX;
     private isValidUUID;
     register(registerDto: RegisterDto): Promise<{
@@ -19,7 +21,7 @@ export declare class AuthService {
             id: string;
             username: string;
             email: string;
-            role: import("./dto/register.dto").UserRole;
+            role: string;
             employee_id: string;
             country_id: string;
             branch_id: string;

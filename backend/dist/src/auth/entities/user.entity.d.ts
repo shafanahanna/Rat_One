@@ -1,10 +1,9 @@
-import { UserRole } from '../dto/register.dto';
 export declare class User {
     id: string;
     username: string;
     email: string;
     password_hash: string;
-    role: UserRole;
+    role: string;
     employee_id: string;
     country_id: string;
     branch_id: string;

@@ -1,5 +1,4 @@
-import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
-import { UserRole } from '../../dto/register.dto';
+import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -15,6 +14,6 @@ export class UpdateUserDto {
   password?: string;
 
   @IsOptional()
-  @IsEnum(UserRole, { message: 'Role must be one of: Director, HR, DM, TC, BA, RT, AC' })
-  role?: UserRole;
+  @IsString()
+  role?: string;
 }

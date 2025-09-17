@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateUserDto = void 0;
 const class_validator_1 = require("class-validator");
-const register_dto_1 = require("./register.dto");
 class CreateUserDto {
 }
 exports.CreateUserDto = CreateUserDto;
@@ -31,8 +30,8 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "password_hash", void 0);
 __decorate([
+    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: 'Role is required' }),
-    (0, class_validator_1.IsEnum)(register_dto_1.UserRole, { message: 'Role must be one of: Director, HR, DM, TC, BA, RT, AC' }),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "role", void 0);
 //# sourceMappingURL=create-user.dto.js.map

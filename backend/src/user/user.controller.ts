@@ -1,6 +1,4 @@
 import { Controller, Get, Param, Put, Body, UseGuards, Query, Post } from '@nestjs/common';
-
-import { UserRole } from '../auth/dto/register.dto';
 import { UpdateUserBranchDto } from './dto/update-user-branch.dto';
 import { UserWithContextDto } from './dto/user-with-context.dto';
 import { AssignmentStatsDto } from './dto/assignment-stats.dto';

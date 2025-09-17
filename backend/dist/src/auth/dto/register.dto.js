@@ -9,18 +9,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegisterDto = exports.UserRole = void 0;
+exports.RegisterDto = void 0;
 const class_validator_1 = require("class-validator");
-var UserRole;
-(function (UserRole) {
-    UserRole["DIRECTOR"] = "Director";
-    UserRole["HR"] = "HR";
-    UserRole["DM"] = "DM";
-    UserRole["TC"] = "TC";
-    UserRole["BA"] = "BA";
-    UserRole["RT"] = "RT";
-    UserRole["AC"] = "AC";
-})(UserRole || (exports.UserRole = UserRole = {}));
 class RegisterDto {
 }
 exports.RegisterDto = RegisterDto;
@@ -40,8 +30,8 @@ __decorate([
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password_hash", void 0);
 __decorate([
+    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: 'Role is required' }),
-    (0, class_validator_1.IsEnum)(UserRole, { message: 'Role must be one of: Director, HR, DM, TC, BA, RT, AC' }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "role", void 0);
 //# sourceMappingURL=register.dto.js.map

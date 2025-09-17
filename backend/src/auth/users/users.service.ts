@@ -145,14 +145,14 @@ export class UsersService {
     const allEmployees = await this.databaseService.query(allEmployeesQuery);
     console.log('All employees in database:', allEmployees);
     
-    // Get users who don't have an employee profile and are not Directors
+    // Get users who don't have an employee profile and are not admin roles
     const query = `
       SELECT u.id, u.username as name, u.email, u.role, u.employee_id
       FROM users u
       WHERE NOT EXISTS (
         SELECT 1 FROM employees e WHERE e.user_id = u.id
       )
-      AND u.role != 'Director'
+      AND u.role NOT IN ('Director', 'Admin')
       -- Removed the employee_id IS NULL condition since it might be filtering out valid users
       ORDER BY u.username
     `;

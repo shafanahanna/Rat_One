@@ -1,5 +1,4 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { UserRole } from '../dto/register.dto';
 
 @Entity('users')
 export class User {
@@ -16,11 +15,10 @@ export class User {
   password_hash: string;
 
   @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.BA
+    type: 'varchar',
+    length: 100
   })
-  role: UserRole;
+  role: string;
 
   @Column({ nullable: true })
   employee_id: string;

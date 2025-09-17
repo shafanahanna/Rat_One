@@ -20,11 +20,13 @@ const typeorm_2 = require("typeorm");
 const bcrypt = require("bcryptjs");
 const database_service_1 = require("./database.service");
 const user_entity_1 = require("./entities/user.entity");
+const roles_service_1 = require("./roles/roles.service");
 let AuthService = class AuthService {
-    constructor(jwtService, dbService, userRepository) {
+    constructor(jwtService, dbService, userRepository, rolesService) {
         this.jwtService = jwtService;
         this.dbService = dbService;
         this.userRepository = userRepository;
+        this.rolesService = rolesService;
         this.UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     }
     isValidUUID(id) {
@@ -101,13 +103,26 @@ let AuthService = class AuthService {
             catch (err) {
                 console.error('Error finding employee ID:', err);
             }
+            let isAdmin = user.role === 'Admin' || user.role === 'Director';
+            if (!isAdmin) {
+                try {
+                    const customRoles = await this.rolesService.findAll();
+                    const userCustomRole = customRoles.find(role => role.name === user.role);
+                    if (userCustomRole && userCustomRole.permissions.includes('admin')) {
+                        isAdmin = true;
+                    }
+                }
+                catch (error) {
+                    console.error('Error checking custom roles:', error);
+                }
+            }
             const token = this.jwtService.sign({
                 sub: user.id,
                 id: user.id,
                 role: user.role,
                 email: user.email,
                 isUUID: isUUID,
-                is_global: user.role === 'Director',
+                is_global: isAdmin,
                 employeeId: employeeId
             });
             return {
@@ -118,7 +133,7 @@ let AuthService = class AuthService {
                 id: user.id,
                 idType: 'uuid',
                 context: {
-                    is_global: user.role === 'Director',
+                    is_global: isAdmin,
                     country_id: '',
                     branch_id: ''
                 }
@@ -139,6 +154,7 @@ exports.AuthService = AuthService = __decorate([
     __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [jwt_1.JwtService,
         database_service_1.DatabaseService,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        roles_service_1.RolesService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

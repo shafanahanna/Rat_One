@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { RegisterDto } from './dto/register.dto';
 import { User } from './entities/user.entity';
+import { RolesService } from './roles/roles.service';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,7 @@ export class AuthService {
     private readonly dbService: DatabaseService,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private readonly rolesService: RolesService,
   ) {}
 
   // UUID validation regex
@@ -134,6 +136,28 @@ export class AuthService {
         // Continue without employee ID if there's an error
       }
 
+      // Check if the role is Admin (previously Director) by looking up the role permissions
+      let isAdmin = user.role === 'Admin' || user.role === 'Director'; // For backward compatibility
+      
+      // If not a default admin role, check if it's a custom role with admin permissions
+      if (!isAdmin) {
+        try {
+          // Find all custom roles
+          const customRoles = await this.rolesService.findAll();
+          
+          // Find the custom role that matches the user's role
+          const userCustomRole = customRoles.find(role => role.name === user.role);
+          
+          // Check if the role has admin permissions
+          if (userCustomRole && userCustomRole.permissions.includes('admin')) {
+            isAdmin = true;
+          }
+        } catch (error) {
+          console.error('Error checking custom roles:', error);
+          // Continue without custom role check if there's an error
+        }
+      }
+      
       const token = this.jwtService.sign(
         { 
           sub: user.id, 
@@ -141,7 +165,7 @@ export class AuthService {
           role: user.role, 
           email: user.email,
           isUUID: isUUID,
-          is_global: user.role === 'Director',
+          is_global: isAdmin,
           employeeId: employeeId
         }
       );
@@ -152,9 +176,9 @@ export class AuthService {
         token,
         role: user.role,
         id: user.id,
-        idType:  'uuid' ,
+        idType:  'uuid',
         context: {
-          is_global: user.role === 'Director',
+          is_global: isAdmin,
           country_id: '',
           branch_id: ''
         }
