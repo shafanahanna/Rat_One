@@ -6,7 +6,7 @@ import UsersList from './pages/users/UsersList';
 import AddUser from './pages/users/AddUser';
 import RolesPermissions from './pages/users/RolesPermissions';
 import Designations from './pages/users/Designations';
-import DirectorSettings from './pages/settings/DirectorSettings';
+import AdminSettings from './pages/settings/DirectorSettings'; // Component file name remains the same for now
 import Layout from './components/Layout';
 import './App.css';
 import HRDashboard from './pages/HolidayManagement/HRDashboard';
@@ -111,7 +111,7 @@ function App() {
           <Route 
             path="/users/roles" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC',"DM"]}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <RolesPermissions />
               </RoleProtectedRoute>
             } 
@@ -120,18 +120,18 @@ function App() {
           <Route 
             path="/users/designations" 
             element={
-              <RoleProtectedRoute allowedRoles={['Director']}>
+              <RoleProtectedRoute allowedRoles={['Admin', 'Director']}>
                 <Designations />
               </RoleProtectedRoute>
             } 
           />
           
-          {/* Director Settings Routes */}
+          {/* Admin Settings Routes */}
           <Route 
-            path="/settings/director" 
+            path="/settings/admin" 
             element={
-              <RoleProtectedRoute allowedRoles={['Director', 'director', 'TC']}>
-                <DirectorSettings />
+              <RoleProtectedRoute allowedRoles={['Admin', 'Director', 'TC']}>
+                <AdminSettings />
               </RoleProtectedRoute>
             } 
           />
@@ -140,7 +140,7 @@ function App() {
           <Route 
             path="/hr" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC',"DM"]}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <HRDashboard />
               </RoleProtectedRoute>
             } 
@@ -149,7 +149,7 @@ function App() {
           <Route 
             path="/hr/employees" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC',"DM"]}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <EmployeeList />
               </RoleProtectedRoute>
             } 
@@ -157,7 +157,7 @@ function App() {
           <Route 
             path="/hr/employees" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC',"DM"]}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <EmployeeList />
               </RoleProtectedRoute>
             } 
@@ -169,7 +169,7 @@ function App() {
           <Route 
             path="/hr/leave-balance" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC',"DM"]}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <LeaveBalanceManagement />
               </RoleProtectedRoute>
             } 
@@ -178,7 +178,7 @@ function App() {
           <Route 
             path="/hr/leave" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC',"DM"]}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <LeaveManagement />
               </RoleProtectedRoute>
             } 
@@ -187,7 +187,7 @@ function App() {
 <Route 
             path="/hr/leave-configuration" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC',"DM"]}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <LeaveConfiguration />
               </RoleProtectedRoute>
             } 
@@ -198,7 +198,7 @@ function App() {
           <Route 
             path="/hr/add-employee" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC',"DM"]}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <AddEmployee />
               </RoleProtectedRoute>
             } 
@@ -207,7 +207,7 @@ function App() {
           <Route 
             path="/hr/employees/:id" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC','DM' ]}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <EmployeeDetails />
               </RoleProtectedRoute>
             } 
@@ -217,7 +217,7 @@ function App() {
 <Route 
             path="/hr/payroll" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC','DM']}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <Payroll />
               </RoleProtectedRoute>
             } 
@@ -226,7 +226,7 @@ function App() {
           <Route 
             path="/hr/attendance" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director', 'TC','DM']}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <Attendance />
               </RoleProtectedRoute>
             } 
@@ -236,7 +236,7 @@ function App() {
 <Route 
             path="/hr/edit-employee/:id" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director']}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director']}>
                 <EditEmployee />
               </RoleProtectedRoute>
             } 
@@ -245,7 +245,7 @@ function App() {
 <Route 
             path="/profile" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director','TC','DM']}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <ProfilePage />
               </RoleProtectedRoute>
             } 
@@ -254,7 +254,7 @@ function App() {
           <Route 
             path="/hr/payroll/:id" 
             element={
-              <RoleProtectedRoute allowedRoles={['HR', 'Director','TC','DM']}>
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
                 <PayrollForm />
               </RoleProtectedRoute>
             } 
