@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { registerUser, clearError } from "../../redux/slices/authSlice";
 import { Eye, EyeOff, User, Lock, Mail, UserCircle } from "lucide-react";
 import bgImage from "../../Images/Login.png";
-import logo from "../../Images/Hayal_Logo.png";
+import logo from "../../Images/Rat one bold.png";
 import Boy from "../../Images/Boy.png";
 import Girl from "../../Images/Girl.png";
 

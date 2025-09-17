@@ -268,13 +268,8 @@ const AddUser = () => {
             >
               <option value="">Select a designation</option>
               <optgroup label="System Designations">
-                <option value="Director">Director</option>
-                <option value="HR">HR</option>
-                <option value="DM">DM</option>
-                <option value="TC">TC</option>
-                <option value="BA">BA - Branch Administration</option>
-                <option value="RT">RT - Reservation and Ticketing</option>
-                <option value="AC">AC - Accounts</option>
+                <option value="Director">Admin</option>
+                
               </optgroup>
               
               {customRoles.length > 0 && (

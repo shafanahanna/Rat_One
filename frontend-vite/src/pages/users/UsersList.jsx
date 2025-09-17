@@ -611,10 +611,8 @@ const UsersList = () => {
                 >
                   <option value="">Select a designation</option>
                   <optgroup label="System Designations">
-                    <option value="Director">Director</option>
-                    <option value="HR">HR</option>
-                    <option value="DM">DM</option>
-                    <option value="TC">TC</option>
+                    <option value="Director">Admin</option>
+                    
                   </optgroup>
                   
                   {customRoles.length > 0 && (

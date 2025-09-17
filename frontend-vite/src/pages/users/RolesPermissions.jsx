@@ -80,47 +80,30 @@ const RolesPermissions = () => {
     try {
       const token = localStorage.getItem('Admintoken');
       
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
+      // Fetch roles from the API
+      const rolesResponse = await axios.get(`${API_URL}/api/roles`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      // Mock roles data
-      const mockRoles = [
-        { id: 1, name: 'Admin', description: 'Full system access', isDefault: false },
-        { id: 2, name: 'Manager', description: 'Department management access', isDefault: false },
-        { id: 3, name: 'User', description: 'Standard user access', isDefault: true },
-        { id: 4, name: 'Guest', description: 'Limited read-only access', isDefault: false }
-      ];
+      // Fetch permissions from the API
+      const permissionsResponse = await axios.get(`${API_URL}/api/permissions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      // Mock permissions data
-      const mockPermissions = [
-        { id: 1, name: 'users.view', description: 'View users', module: 'Users' },
-        { id: 2, name: 'users.create', description: 'Create users', module: 'Users' },
-        { id: 3, name: 'users.edit', description: 'Edit users', module: 'Users' },
-        { id: 4, name: 'users.delete', description: 'Delete users', module: 'Users' },
-        { id: 5, name: 'roles.view', description: 'View roles', module: 'Roles' },
-        { id: 6, name: 'roles.create', description: 'Create roles', module: 'Roles' },
-        { id: 7, name: 'roles.edit', description: 'Edit roles', module: 'Roles' },
-        { id: 8, name: 'roles.delete', description: 'Delete roles', module: 'Roles' },
-        { id: 9, name: 'dashboard.view', description: 'View dashboard', module: 'Dashboard' },
-        { id: 10, name: 'reports.view', description: 'View reports', module: 'Reports' },
-        { id: 11, name: 'reports.create', description: 'Create reports', module: 'Reports' },
-        { id: 12, name: 'settings.view', description: 'View settings', module: 'Settings' },
-        { id: 13, name: 'settings.edit', description: 'Edit settings', module: 'Settings' }
-      ];
+      // Fetch role permissions from the API
+      const rolePermissionsResponse = await axios.get(`${API_URL}/api/role-permissions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      // Mock role permissions
-      const mockRolePermissions = {
-        1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], // Admin has all permissions
-        2: [1, 3, 5, 9, 10, 11, 12], // Manager permissions
-        3: [1, 9, 10], // User permissions
-        4: [9] // Guest permissions
-      };
+      const fetchedRoles = rolesResponse.data.data || [];
+      const fetchedPermissions = permissionsResponse.data.data || [];
+      const fetchedRolePermissions = rolePermissionsResponse.data.data || {};
       
-      setRoles(mockRoles);
-      setPermissions(mockPermissions);
+      setRoles(fetchedRoles);
+      setPermissions(fetchedPermissions);
       
       // Group permissions by module
-      const permsByModule = mockPermissions.reduce((acc, perm) => {
+      const permsByModule = fetchedPermissions.reduce((acc, perm) => {
         if (!acc[perm.module]) {
           acc[perm.module] = [];
         }
@@ -129,8 +112,12 @@ const RolesPermissions = () => {
       }, {});
       
       setPermissionsByModule(permsByModule);
-      setRolePermissions(mockRolePermissions);
-      setSelectedRole(mockRoles[0]); // Select first role by default
+      setRolePermissions(fetchedRolePermissions);
+      
+      // Select first role by default if available
+      if (fetchedRoles.length > 0) {
+        setSelectedRole(fetchedRoles[0]);
+      }
       
     } catch (error) {
       console.error('Error fetching roles and permissions:', error);
@@ -166,8 +153,15 @@ const RolesPermissions = () => {
 
   const handleRoleSubmit = async () => {
     try {
+      const token = localStorage.getItem('Admintoken');
+      
       if (isEditingRole) {
         // Update existing role
+        await axios.put(`${API_URL}/api/roles/${currentRole.id}`, currentRole, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Update local state
         const updatedRoles = roles.map(role => 
           role.id === currentRole.id ? { ...currentRole } : role
         );
@@ -175,10 +169,13 @@ const RolesPermissions = () => {
         setSuccess('Role updated successfully');
       } else {
         // Create new role
-        const newRole = {
-          ...currentRole,
-          id: Math.max(...roles.map(r => r.id), 0) + 1
-        };
+        const response = await axios.post(`${API_URL}/api/roles`, currentRole, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const newRole = response.data.data;
+        
+        // Update local state
         setRoles([...roles, newRole]);
         setRolePermissions({
           ...rolePermissions,
@@ -197,10 +194,17 @@ const RolesPermissions = () => {
     }
   };
 
-  const handleDeleteRole = (roleId) => {
+  const handleDeleteRole = async (roleId) => {
     if (confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
       try {
-        // Remove role from state
+        const token = localStorage.getItem('Admintoken');
+        
+        // Delete role from API
+        await axios.delete(`${API_URL}/api/roles/${roleId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Update local state
         const updatedRoles = roles.filter(role => role.id !== roleId);
         setRoles(updatedRoles);
         
@@ -255,8 +259,14 @@ const RolesPermissions = () => {
     
     setSavingPermissions(true);
     try {
-      // In a real application, you would save this to your API
-      // For now, we'll just simulate a successful save
+      const token = localStorage.getItem('Admintoken');
+      
+      // Save role permissions to API
+      await axios.post(`${API_URL}/api/role-permissions/${selectedRole.id}`, {
+        permissionIds: rolePermissions[selectedRole.id] || []
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       setSuccess('Permissions saved successfully');
       

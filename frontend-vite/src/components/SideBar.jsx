@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import Logo from "../Images/Ratone.png";
+import Logo from "../Images/Rat one bold.png";
 import axios from "axios";
 import { 
   Plane, 
@@ -58,7 +58,8 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
     
     // Role-based permissions mapping - updated for HRM system only
     const rolePermissions = {
-      Director: ['dashboard', 'users', 'settings', 'hr', 'employees', 'attendance', 'payroll', 'leave'],
+      Director: ['dashboard', 'users', 'settings', 'hr', 'employees', 'attendance', 'payroll', 'leave'], // Keep for backward compatibility
+      Admin: ['dashboard', 'users', 'settings', 'hr', 'employees', 'attendance', 'payroll', 'leave'],
       DM: ['dashboard', 'hr', 'employees', 'attendance', 'payroll', 'leave'],
       HR: ['hr', 'employees', 'attendance', 'payroll', 'leave'],
       TC: ['dashboard', 'hr', 'employees', 'attendance', 'payroll']
@@ -209,7 +210,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
       <div 
         onClick={() => toggleSection(section)}
         className={`flex items-center justify-between px-3 py-2 mt-2 mb-1 cursor-pointer
-          ${isOpen ? 'hover:bg-[#F1F3F4]' : ''} transition-colors rounded-full`}
+          ${isOpen ? 'hover:bg-[#E8EAED]' : ''} transition-colors rounded-full`}
       >
         <div className="flex items-center gap-3">
           {Icon && <Icon size={18} className="text-[#5F6368]" />}
@@ -242,29 +243,27 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
         } transition-all duration-300 shadow-xl z-50 flex`}
       >
         {/* Header */}
-        <div className=" relative h-16 flex items-center justify-center px-4 border-b border-[#DADCE0]">
+        <div className="relative h-16 flex items-center justify-center px-4 border-b border-[#DADCE0] bg-white">
           {isOpen && (
             <div className="flex items-center space-x-2">
-              {/* <div className="w-8 h-8 rounded-lg flex items-center justify-center px-12"> */}
-                  <img
-                    src={Logo}
-                    alt="Best international travel agency in Kerala"
-                    className="h-[30px] w-auto object-contain  "
-                  />
-              {/* </div> */}
+              <img
+                src={Logo}
+                alt="Best international travel agency in Kerala"
+                className="h-[30px] w-auto object-contain"
+              />
             </div>
           )}
           <button
             onClick={handleToggle}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full transition-colors"
           >
             <i className={`fas ${isOpen ? "fa-chevron-left" : "fa-bars"}`}></i>
           </button>
         </div>
 
-        {/* Role Badge - only for HR and DM */}
-        {isOpen && userRole && userRole !== "Director" && (
-          <div className="px-4 py-2 border-b border-[#DADCE0]">
+        {/* Role Badge - only for non-admin roles */}
+        {isOpen && userRole && userRole !== "Director" && userRole !== "Admin" && (
+          <div className="px-4 py-2 border-b border-[#DADCE0] bg-white">
             <div className="bg-[#E8F0FE] rounded-full px-3 py-2 flex items-center justify-center">
               <span className="text-[#1A73E8] font-medium text-sm">
                 Logged in as: <span className="font-bold text-[#202124]">{userRole}</span>
@@ -275,7 +274,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
            
         {/* Navigation */}
         <nav 
-          className="flex-1 py-4 px-2 space-y-1 overflow-auto"
+          className="flex-1 py-4 px-2 space-y-1 overflow-auto bg-gray-50"
           style={{
             msOverflowStyle: "none",
             scrollbarWidth: "none",
@@ -295,7 +294,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                   isActive
                     ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                    : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                    : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                 }`
               }
             >
@@ -307,7 +306,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
           
 
           {/* User Management Section */}
-          {(userRole === "Director" || hasPermission("users")) && (
+          {(userRole === "Director" || userRole === "Admin" || hasPermission("users")) && (
             <>
               <SectionHeader
                 title="User Management"
@@ -324,7 +323,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
                           ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -333,14 +332,14 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                   </NavLink>
                   
                   {/* Designations */}
-                  {(userRole === "Director" || hasPermission("designations")) && (
+                  {(userRole === "Director" || userRole === "Admin" || hasPermission("designations")) && (
                     <NavLink
                       to="/users/designations"
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                           isActive
                             ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                            : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                            : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                         }`
                       }
                     >
@@ -354,7 +353,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
           )}
 
           {/* HR Management Section */}
-          {(userRole === "Director" || userRole === "HR" || userRole === "TC" || userRole === "DM" || hasPermission("hr")) && (
+          {(userRole === "Director" || userRole === "Admin" || userRole === "HR" || userRole === "TC" || userRole === "DM" || hasPermission("hr")) && (
             <>
               <SectionHeader
                 title="HR Management"
@@ -371,7 +370,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
                           ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -386,7 +385,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
                           ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -401,7 +400,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
                           ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -416,7 +415,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
                           ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -431,7 +430,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
                           ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -446,7 +445,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                         isActive
                           ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                          : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                          : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                       }`
                     }
                   >
@@ -465,15 +464,15 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
 
 
 
-          {/* Settings - Direct Link to Director Settings */}
-          {userRole && userRole.toLowerCase() === "director" && (
+          {/* Settings - Admin Settings */}
+          {userRole && (userRole.toLowerCase() === "director" || userRole.toLowerCase() === "admin") && (
             <NavLink
-              to="/settings/director"
+              to="/settings/admin"
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                   isActive
                     ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                    : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                    : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
                 }`
               }
             >
@@ -487,14 +486,14 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
         </nav>
 
         {/* Footer */}
-        <div className="p-2 border-t border-[#DADCE0] space-y-1">
+        <div className="p-2 border-t border-[#DADCE0] space-y-1 bg-white">
         <NavLink
             to="/profile"
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                 isActive
                   ? "bg-[#E8F0FE] text-[#1A73E8] rounded-full"
-                  : "text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full"
+                  : "text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full"
               }`
             }
           >
@@ -521,7 +520,7 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
           </NavLink>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-[#5F6368] hover:bg-[#F1F3F4] hover:text-[#202124] rounded-full transition-all duration-200"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-[#5F6368] hover:bg-[#E8EAED] hover:text-[#202124] rounded-full transition-all duration-200"
           >
             <i className="fas fa-sign-out-alt text-lg"></i>
             {isOpen && <span>Logout</span>}
