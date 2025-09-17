@@ -1,28 +1,58 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { confirmAlert } from "react-confirm-alert";
-import "react-confirm-alert/src/react-confirm-alert.css";
-import axios from "axios";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { fetchEmployees as fetchEmployeesThunk, deleteEmployee as deleteEmployeeThunk, updateSalaryStatus as updateSalaryStatusThunk } from '../../redux/slices/employeeSlice';
-
-import {
-  Plus,
-  Edit,
-  Trash2,
+import { 
+  Container, 
+  Typography, 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow,
+  TablePagination,
+  Button,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Chip,
+  Box,
+  CircularProgress,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Card,
+  CardContent,
+  Tooltip,
+  Menu,
+  MenuItem,
+  Fade,
+  Avatar,
+  FormControl,
+  InputLabel,
+  Select
+} from '@mui/material';
+import { 
+  Search, 
+  Edit, 
+  Trash2, 
+  UserPlus, 
+  RefreshCw, 
+  MoreVertical, 
+  Info,
   CheckCircle,
   XCircle,
   Clock,
-  ArrowLeft,
-  UserPlus,
   Eye,
   Users,
-  Filter,
-  Search,
-  RefreshCw,
   Briefcase,
-} from "lucide-react";
-
+  Filter,
+  Plus
+} from 'lucide-react';
 import { useIsMobile } from "../../hooks/useIsMobile";
 
 const EmployeeList = () => {
@@ -36,6 +66,14 @@ const EmployeeList = () => {
   const isMobile = useIsMobile();
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+  
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
 
   // Use Redux thunk to fetch employees
   const fetchEmployees = () => {
@@ -64,6 +102,48 @@ const EmployeeList = () => {
     return matchesDepartment && matchesSearch;
   });
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+  
+  const handleMenuOpen = (event, employeeId) => {
+    setMenuAnchorEl(event.currentTarget);
+    setSelectedEmployeeId(employeeId);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setSelectedEmployeeId(null);
+  };
+  
+  const handleMenuEdit = () => {
+    handleEditEmployee(selectedEmployeeId);
+    handleMenuClose();
+  };
+
+  const handleMenuDelete = () => {
+    const employee = employees.find(employee => employee.id === selectedEmployeeId);
+    if (employee) {
+      setEmployeeToDelete(employee);
+      setDeleteDialogOpen(true);
+    }
+    handleMenuClose();
+  };
+  
+  const handleMenuView = () => {
+    handleViewEmployee(selectedEmployeeId);
+    handleMenuClose();
+  };
+  
   const handleAddEmployee = () => {
     navigate("/hr/add-employee");
   };
@@ -80,20 +160,22 @@ const EmployeeList = () => {
     dispatch(updateSalaryStatusThunk({ id: employeeId, status }));
   };
 
-  const deleteEmployee = (employeeId) => {
-    confirmAlert({
-      title: "Confirm Deletion",
-      message: "Are you sure you want to delete this employee?",
-      buttons: [
-        {
-          label: "Yes",
-          onClick: () => {
-            dispatch(deleteEmployeeThunk(employeeId));
-          },
-        },
-        { label: "No" },
-      ],
-    });
+  const handleDeleteClick = (employee) => {
+    setEmployeeToDelete(employee);
+    setDeleteDialogOpen(true);
+  };
+  
+  const handleDeleteConfirm = () => {
+    if (!employeeToDelete) return;
+    
+    dispatch(deleteEmployeeThunk(employeeToDelete.id));
+    setDeleteDialogOpen(false);
+    setEmployeeToDelete(null);
+  };
+  
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setEmployeeToDelete(null);
   };
 
   const SalaryStatus = ({ employee }) => {
@@ -101,418 +183,707 @@ const EmployeeList = () => {
     const statusMap = {
       Pending: { 
         icon: Clock, 
-        bgColor: "bg-yellow-100", 
-        textColor: "text-yellow-800", 
-        label: "Pending" 
+        bgColor: '#fff8e1', 
+        textColor: '#ff8f00', 
+        label: 'Pending' 
       },
       Approved: {
         icon: CheckCircle,
-        bgColor: "bg-green-100",
-        textColor: "text-green-800",
-        label: "Approved",
+        bgColor: '#e6f4ea',
+        textColor: '#1e8e3e',
+        label: 'Approved',
       },
       Rejected: { 
         icon: XCircle, 
-        bgColor: "bg-red-100", 
-        textColor: "text-red-800", 
-        label: "Rejected" 
+        bgColor: '#fce8e6', 
+        textColor: '#d93025', 
+        label: 'Rejected' 
       },
     };
 
     const currentStatus = statusMap[employee.salary_status] || {
       icon: null,
-      bgColor: "bg-gray-100",
-      textColor: "text-gray-800",
-      label: "Approved"
+      bgColor: '#f1f3f4',
+      textColor: '#5f6368',
+      label: 'Approved'
     };
     
     const Icon = currentStatus.icon;
 
     return (
-      <div className="flex flex-col space-y-1">
-        <span className={`px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${currentStatus.bgColor} ${currentStatus.textColor}`}>
-          {Icon && <Icon size={14} className="mr-1" />}
-          {currentStatus.label}
-        </span>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Chip
+          size="small"
+          label={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              {Icon && <Icon size={14} />}
+              {currentStatus.label}
+            </Box>
+          }
+          sx={{
+            bgcolor: currentStatus.bgColor,
+            color: currentStatus.textColor,
+            fontWeight: 500,
+            fontSize: '0.75rem',
+            height: '24px',
+            borderRadius: '16px',
+            '& .MuiChip-label': { px: 1.5 }
+          }}
+        />
         
-        {!isMobile && employee.salary_status === "Pending" && (
-          <div className="text-xs text-gray-500 mt-1">
+        {!isMobile && employee.salary_status === 'Pending' && (
+          <Typography variant="caption" sx={{ color: '#5f6368' }}>
             Proposed: ₹{employee.proposed_salary}
-          </div>
+          </Typography>
         )}
         
-        {userRole === "Director" && employee.salary_status === "Pending" && (
-          <div className="flex items-center space-x-2 mt-2">
-            <button
-              onClick={() => handleUpdateSalaryStatus(employee.id, "Approved")}
-              className="p-1 rounded-full bg-green-50 text-green-600 hover:bg-green-100"
-              title="Approved"
+        {userRole === 'Director' && employee.salary_status === 'Pending' && (
+          <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+            <IconButton
+              size="small"
+              onClick={() => handleUpdateSalaryStatus(employee.id, 'Approved')}
+              sx={{ 
+                p: 0.5, 
+                bgcolor: '#e6f4ea', 
+                color: '#1e8e3e',
+                '&:hover': { bgcolor: '#ceead6' }
+              }}
+              title="Approve"
             >
               <CheckCircle size={16} />
-            </button>
-            <button
-              onClick={() => handleUpdateSalaryStatus(employee.id, "Rejected")}
-              className="p-1 rounded-full bg-red-50 text-red-600 hover:bg-red-100"
-              title="Rejected"
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => handleUpdateSalaryStatus(employee.id, 'Rejected')}
+              sx={{ 
+                p: 0.5, 
+                bgcolor: '#fce8e6', 
+                color: '#d93025',
+                '&:hover': { bgcolor: '#f6cbc7' }
+              }}
+              title="Reject"
             >
               <XCircle size={16} />
-            </button>
-          </div>
+            </IconButton>
+          </Box>
         )}
-      </div>
+      </Box>
     );
   };
 
   const EmployeeRow = ({ employee }) => {
     return (
-      <tr key={employee.id} className="hover:bg-gray-50 transition-colors">
-        <td className="px-4 py-4 whitespace-nowrap">
-          <div className="text-sm font-medium text-gray-900">
-            {employee.empCode
-            }
-          </div>
-        </td>
-        <td className="px-4 py-4 whitespace-nowrap">
-          <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-[#47BCCB]/20 flex items-center justify-center text-[#47BCCB] font-medium">
-              {employee.fullName ? employee.fullName.substring(0, 1).toUpperCase():""}
-            </div>
-            <div className="ml-3">
-              <div className="text-sm font-medium text-gray-900">{employee.fullName}</div>
-            </div>
-          </div>
-        </td>
-        <td className="px-4 py-4 whitespace-nowrap">
-          <div className="text-sm text-gray-500">{employee.user.email}</div>
-        </td>
-        <td className="px-4 py-4 whitespace-nowrap">
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-            {employee.designation}
-          </span>
-        </td>
-        <td className="px-4 py-4 whitespace-nowrap">
-          <div className="text-sm text-gray-900">{employee.department}</div>
-        </td>
-        <td className="px-4 py-4 whitespace-nowrap">
+      <TableRow 
+        hover
+        sx={{ 
+          '&:hover': { bgcolor: '#f8f9fa' },
+          '& td': { borderBottom: '1px solid #e0e0e0', py: 2 }
+        }}
+      >
+        <TableCell>
+          <Typography sx={{ color: '#202124', fontWeight: 500 }}>
+            {employee.empCode || `EMP-${employee.id?.substring(0, 6)}`}
+          </Typography>
+        </TableCell>
+        <TableCell>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar 
+              sx={{ 
+                width: 32, 
+                height: 32, 
+                bgcolor: '#e8f0fe', 
+                color: '#1a73e8',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                mr: 1.5
+              }}
+            >
+              {employee.fullName ? employee.fullName.substring(0, 1).toUpperCase() : ''}
+            </Avatar>
+            <Typography sx={{ color: '#202124', fontWeight: 500 }}>
+              {employee.fullName}
+            </Typography>
+          </Box>
+        </TableCell>
+        <TableCell sx={{ color: '#5f6368' }}>
+          {employee.user?.email}
+        </TableCell>
+        <TableCell>
+          <Chip 
+            label={employee.designation} 
+            size="small" 
+            sx={{ 
+              bgcolor: '#e8f0fe', 
+              color: '#1a73e8',
+              borderRadius: '16px',
+              '& .MuiChip-label': { px: 1.5 },
+              fontSize: '0.75rem',
+              height: '24px'
+            }}
+          />
+        </TableCell>
+        <TableCell sx={{ color: '#5f6368' }}>
+          {employee.department}
+        </TableCell>
+        <TableCell>
           <SalaryStatus employee={employee} />
-        </td>
-        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-          <div className="flex space-x-1">
-            <button
-              onClick={() => handleViewEmployee(employee.id)}
-              className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-full"
-              title="View Details"
+        </TableCell>
+        <TableCell align="right">
+          <Tooltip title="More actions">
+            <IconButton 
+              size="small"
+              onClick={(e) => handleMenuOpen(e, employee.id)}
+              sx={{ 
+                color: '#5f6368',
+                '&:hover': { bgcolor: '#f1f3f4' }
+              }}
             >
-              <Eye size={18} />
-            </button>
-            <button
-              onClick={() => handleEditEmployee(employee.id)}
-              className="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-full"
-              title="Edit"
-            >
-              <Edit size={18} />
-            </button>
-            <button
-              onClick={() => deleteEmployee(employee.id)}
-              className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-full"
-              title="Delete"
-            >
-              <Trash2 size={18} />
-            </button>
-          </div>
-        </td>
-      </tr>
+              <MoreVertical size={18} />
+            </IconButton>
+          </Tooltip>
+        </TableCell>
+      </TableRow>
     );
   };
   
   const MobileEmployeeCard = ({ employee }) => {
     // Format employee code or use a fallback
-    const employeeCode = employee.empCode
-    || `EMP-${employee.id.substring(0, 6)}`;
+    const employeeCode = employee.empCode || `EMP-${employee.id?.substring(0, 6)}`;
     
     return (
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-4 border border-gray-100">
-        <div className="flex justify-between items-start">
-          <div className="flex items-start">
-            <div className="mr-3">
-              <div className="h-12 w-12 rounded-full bg-[#47BCCB]/20 flex items-center justify-center text-[#47BCCB] font-medium">
+      <Card 
+        elevation={0} 
+        sx={{ 
+          mb: 2, 
+          borderRadius: '12px', 
+          border: '1px solid #dadce0',
+          overflow: 'visible'
+        }}
+      >
+        <CardContent sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+              <Avatar
+                sx={{ 
+                  width: 40, 
+                  height: 40, 
+                  bgcolor: '#e8f0fe', 
+                  color: '#1a73e8',
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  mr: 1.5
+                }}
+              >
                 {employee.fullName ? employee.fullName.substring(0, 2).toUpperCase() : "NA"}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">
-                {employee.fullName}
-              </h3>
-              <p className="text-sm text-gray-500">{employee.user}</p>
-              <div className="mt-2 flex items-center">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                  {employee.designation}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => handleViewEmployee(employee.id)}
-              className="p-2 bg-[#e6f7f9] text-[#47BCCB] rounded-full"
-              title="View Employee"
-            >
-              <Eye size={18} />
-            </button>
-            <button
-              onClick={() => handleEditEmployee(employee.id)}
-              className="p-2 bg-[#e6f7f9] text-[#47BCCB] rounded-full"
-              title="Edit Employee"
-            >
-              <Edit size={18} />
-            </button>
-          </div>
-        </div>
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 500, color: '#202124' }}>
+                  {employee.fullName}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#5f6368', mb: 1 }}>
+                  {employee.user?.email}
+                </Typography>
+                <Chip 
+                  label={employee.designation} 
+                  size="small" 
+                  sx={{ 
+                    bgcolor: '#e8f0fe', 
+                    color: '#1a73e8',
+                    borderRadius: '16px',
+                    '& .MuiChip-label': { px: 1.5 },
+                    fontSize: '0.75rem',
+                    height: '24px'
+                  }}
+                />
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <IconButton
+                onClick={() => handleViewEmployee(employee.id)}
+                sx={{ 
+                  bgcolor: '#e8f0fe',
+                  color: '#1a73e8',
+                  '&:hover': { bgcolor: '#d4e6fc' }
+                }}
+                size="small"
+              >
+                <Eye size={16} />
+              </IconButton>
+              <IconButton
+                onClick={(e) => handleMenuOpen(e, employee.id)}
+                sx={{ 
+                  bgcolor: '#e8f0fe',
+                  color: '#1a73e8',
+                  '&:hover': { bgcolor: '#d4e6fc' }
+                }}
+                size="small"
+              >
+                <MoreVertical size={16} />
+              </IconButton>
+            </Box>
+          </Box>
 
-        <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-gray-100">
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide">
-              Department
-            </p>
-            <p className="font-medium text-gray-700 mt-1">
-              {employee.department}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide">
-              ID
-            </p>
-            <p className="font-medium text-gray-700 mt-1">
-              {employeeCode}
-            </p>
-          </div>
-          <div className="col-span-2">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">
-              Salary Status
-            </p>
-            <div className="mt-1">
-              <SalaryStatus employee={employee} />
-            </div>
-          </div>
-        </div>
-      </div>
+          <Box 
+            sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: '1fr 1fr', 
+              gap: 2, 
+              mt: 2,
+              pt: 2,
+              borderTop: '1px solid #f1f3f4'
+            }}
+          >
+            <Box>
+              <Typography variant="caption" sx={{ color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Department
+              </Typography>
+              <Typography sx={{ fontWeight: 500, color: '#202124', mt: 0.5 }}>
+                {employee.department}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" sx={{ color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                ID
+              </Typography>
+              <Typography sx={{ fontWeight: 500, color: '#202124', mt: 0.5 }}>
+                {employeeCode}
+              </Typography>
+            </Box>
+            <Box sx={{ gridColumn: 'span 2' }}>
+              <Typography variant="caption" sx={{ color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Salary Status
+              </Typography>
+              <Box sx={{ mt: 0.5 }}>
+                <SalaryStatus employee={employee} />
+              </Box>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
     );
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Employee Management</h1>
-      </div>
-      
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-[#e6f7f9] mr-4">
-              <Users className="h-6 w-6 text-[#47BCCB]" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Employees</p>
-              <p className="text-2xl font-bold text-gray-800">{employees.length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-[#e6f7f9] mr-4">
-              <CheckCircle className="h-6 w-6 text-[#47BCCB]" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Present Today</p>
-              <p className="text-2xl font-bold text-gray-800">{presentToday}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-[#e6f7f9] mr-4">
-              <Briefcase className="h-6 w-6 text-[#47BCCB]" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Departments</p>
-              <p className="text-2xl font-bold text-gray-800">{departments.length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-[#e6f7f9] mr-4">
-              <Filter className="h-6 w-6 text-[#47BCCB]" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Filtered Results</p>
-              <p className="text-2xl font-bold text-gray-800">{filteredEmployees.length}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Search and Filter Bar */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Card elevation={0} sx={{ mb: 3, borderRadius: '16px', overflow: 'visible' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, mb: 2 }}>
+            <Typography 
+              variant="h5" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 500, 
+                color: '#202124',
+                fontSize: '1.5rem',
+                mb: { xs: 2, md: 0 }
+              }}
+            >
+              Employee Management
+            </Typography>
+            
+            <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', md: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
+              <TextField
                 placeholder="Search employees..."
-                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#47BCCB] focus:border-transparent"
+                variant="outlined"
+                size="small"
+                fullWidth
+                sx={{ 
+                  width: { sm: '250px' },
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '24px',
+                    '& fieldset': { borderColor: '#dadce0' },
+                    '&:hover fieldset': { borderColor: '#bdc1c6' },
+                    '&.Mui-focused fieldset': { borderColor: '#1a73e8' }
+                  }
+                }}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search size={18} color="#5f6368" />
+                    </InputAdornment>
+                  ),
+                }}
               />
-            </div>
-          </div>
-          
-          <div className="w-full md:w-64">
-            <select
-              className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#47BCCB] focus:border-transparent"
-              value={selectedDepartment}
-              onChange={(e) => setSelectedDepartment(e.target.value)}
-            >
-              <option value="">All Departments</option>
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <button 
-            onClick={() => fetchEmployees()}
-            className="flex items-center justify-center gap-2 bg-[#e6f7f9] text-[#47BCCB] px-4 py-2 rounded-lg hover:bg-[#d0f0f5] transition-colors"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span>Refresh</span>
-          </button>
-          
-          <button 
-            onClick={handleAddEmployee}
-            className="flex items-center justify-center gap-2 bg-[#47BCCB] text-white px-4 py-2 rounded-lg hover:bg-[#3a9aa8] transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Employee</span>
-          </button>
-        </div>
-      </div>
-      
+              <FormControl sx={{ width: { xs: '100%', sm: '200px' } }}>
+                <Select
+                  displayEmpty
+                  size="small"
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  sx={{ 
+                    borderRadius: '24px',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#dadce0' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#bdc1c6' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#1a73e8' }
+                  }}
+                >
+                  <MenuItem value="">All Departments</MenuItem>
+                  {departments.map((dept) => (
+                    <MenuItem key={dept} value={dept}>{dept}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button
+                variant="contained"
+                sx={{ 
+                  bgcolor: '#1a73e8', 
+                  borderRadius: '24px',
+                  textTransform: 'none',
+                  boxShadow: 'none',
+                  '&:hover': { bgcolor: '#1765cc', boxShadow: '0 1px 3px 0 rgba(60,64,67,0.3)' }
+                }}
+                startIcon={<UserPlus size={16} />}
+                onClick={handleAddEmployee}
+              >
+                Add Employee
+              </Button>
+              <Tooltip title="Refresh">
+                <IconButton 
+                  onClick={fetchEmployees} 
+                  sx={{ 
+                    bgcolor: '#f1f3f4', 
+                    borderRadius: '50%',
+                    '&:hover': { bgcolor: '#e8eaed' }
+                  }}
+                >
+                  <RefreshCw size={18} color="#5f6368" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
+
+          {/* Statistics Cards */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2, mt: 3 }}>
+            <Card elevation={0} sx={{ p: 2, border: '1px solid #dadce0', borderRadius: '12px' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: '#e8f0fe', color: '#1a73e8', mr: 2 }}>
+                  <Users size={20} />
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" sx={{ color: '#5f6368' }}>Total Employees</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#202124' }}>{employees.length}</Typography>
+                </Box>
+              </Box>
+            </Card>
+
+            <Card elevation={0} sx={{ p: 2, border: '1px solid #dadce0', borderRadius: '12px' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: '#e8f0fe', color: '#1a73e8', mr: 2 }}>
+                  <CheckCircle size={20} />
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" sx={{ color: '#5f6368' }}>Present Today</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#202124' }}>{presentToday}</Typography>
+                </Box>
+              </Box>
+            </Card>
+
+            <Card elevation={0} sx={{ p: 2, border: '1px solid #dadce0', borderRadius: '12px' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: '#e8f0fe', color: '#1a73e8', mr: 2 }}>
+                  <Briefcase size={20} />
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" sx={{ color: '#5f6368' }}>Departments</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#202124' }}>{departments.length}</Typography>
+                </Box>
+              </Box>
+            </Card>
+
+            <Card elevation={0} sx={{ p: 2, border: '1px solid #dadce0', borderRadius: '12px' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: '#e8f0fe', color: '#1a73e8', mr: 2 }}>
+                  <Filter size={20} />
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" sx={{ color: '#5f6368' }}>Filtered Results</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#202124' }}>{filteredEmployees.length}</Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Box>
+        </CardContent>
+      </Card>
+
       {/* Employee List Content */}
-      <div className="bg-gray-50 rounded-lg">
-        {isMobile ? (
-          // Mobile View
-          <div className="pt-5 pb-20"> {/* Added bottom padding for floating button */}
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#47BCCB]"></div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredEmployees.length > 0 ? (
-                  filteredEmployees.map((employee) => (
-                    <MobileEmployeeCard
-                      key={employee.id}
-                      employee={employee}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-12 text-gray-500 bg-white rounded-lg shadow-sm border border-gray-100">
-                    <p className="text-lg font-medium">No employees found</p>
-                    <p className="text-sm mt-1">
-                      {searchTerm || selectedDepartment ? "Try adjusting your filters" : "Add your first employee to get started"}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            <button
-              onClick={handleAddEmployee}
-              className="fixed bottom-20 lg:bottom-10 right-6 z-50 bg-[#47BCCB] hover:bg-[#3a9aa8] text-white p-4 rounded-full flex items-center justify-center shadow-lg transition-colors"
-              aria-label="Add Employee"
-            >
-              <UserPlus className="w-5 h-5" />
-            </button>
-          </div>
+      <Card 
+        elevation={0} 
+        sx={{ 
+          borderRadius: '16px', 
+          overflow: 'hidden',
+          border: '1px solid #dadce0' 
+        }}
+      >
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
         ) : (
-          // Desktop View
-          <div className="py-6">
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#47BCCB]"></div>
-              </div>
+          <>
+            {isMobile ? (
+              // Mobile View
+              <Box sx={{ p: 2 }}>
+                {filteredEmployees.length > 0 ? (
+                  filteredEmployees
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((employee) => (
+                      <MobileEmployeeCard
+                        key={employee.id}
+                        employee={employee}
+                      />
+                    ))
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 6, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Info size={40} color="#80868b" />
+                    <Typography sx={{ color: '#5f6368', mt: 1 }}>
+                      No employees found
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#80868b' }}>
+                      {searchTerm || selectedDepartment ? "Try adjusting your filters" : "Add your first employee to get started"}
+                    </Typography>
+                  </Box>
+                )}
+                <Box sx={{ position: 'fixed', bottom: { xs: '80px', lg: '40px' }, right: '24px', zIndex: 50 }}>
+                  <Tooltip title="Add Employee">
+                    <IconButton
+                      onClick={handleAddEmployee}
+                      sx={{ 
+                        bgcolor: '#1a73e8', 
+                        color: 'white',
+                        width: 56,
+                        height: 56,
+                        boxShadow: '0 2px 10px rgba(60,64,67,.3)',
+                        '&:hover': { bgcolor: '#1765cc' }
+                      }}
+                    >
+                      <UserPlus size={24} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              // Desktop View
+              <>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell 
+                          sx={{ 
+                            fontWeight: 500, 
+                            color: '#5f6368', 
+                            borderBottom: '1px solid #e0e0e0',
+                            py: 2
+                          }}
+                        >
                           Employee ID
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            fontWeight: 500, 
+                            color: '#5f6368', 
+                            borderBottom: '1px solid #e0e0e0',
+                            py: 2
+                          }}
+                        >
                           Name
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            fontWeight: 500, 
+                            color: '#5f6368', 
+                            borderBottom: '1px solid #e0e0e0',
+                            py: 2
+                          }}
+                        >
                           Email
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            fontWeight: 500, 
+                            color: '#5f6368', 
+                            borderBottom: '1px solid #e0e0e0',
+                            py: 2
+                          }}
+                        >
                           Designation
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            fontWeight: 500, 
+                            color: '#5f6368', 
+                            borderBottom: '1px solid #e0e0e0',
+                            py: 2
+                          }}
+                        >
                           Department
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            fontWeight: 500, 
+                            color: '#5f6368', 
+                            borderBottom: '1px solid #e0e0e0',
+                            py: 2
+                          }}
+                        >
                           Status
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        </TableCell>
+                        <TableCell 
+                          align="right"
+                          sx={{ 
+                            fontWeight: 500, 
+                            color: '#5f6368', 
+                            borderBottom: '1px solid #e0e0e0',
+                            py: 2
+                          }}
+                        >
                           Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
                       {filteredEmployees.length > 0 ? (
-                        filteredEmployees.map((employee) => (
-                          <EmployeeRow
-                            key={employee.id}
-                            employee={employee}
-                          />
-                        ))
+                        filteredEmployees
+                          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                          .map((employee) => (
+                            <EmployeeRow
+                              key={employee.id}
+                              employee={employee}
+                            />
+                          ))
                       ) : (
-                        <tr>
-                          <td
-                            colSpan="7"
-                            className="px-4 py-8 text-center text-gray-500"
-                          >
-                            <div className="flex flex-col items-center">
-                              <p className="text-lg font-medium">
+                        <TableRow>
+                          <TableCell colSpan={7} sx={{ textAlign: 'center', py: 6 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                              <Info size={40} color="#80868b" />
+                              <Typography sx={{ color: '#5f6368', mt: 1 }}>
                                 No employees found
-                              </p>
-                              <p className="text-sm mt-1">
+                              </Typography>
+                              <Typography variant="body2" sx={{ color: '#80868b' }}>
                                 {searchTerm || selectedDepartment ? "Try adjusting your filters" : "Add your first employee to get started"}
-                              </p>
-                            </div>
-                          </td>
-                        </tr>
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
                       )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 25]}
+                  component="div"
+                  count={filteredEmployees.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  sx={{
+                    borderTop: '1px solid #e0e0e0',
+                    '.MuiTablePagination-select': {
+                      borderRadius: '4px',
+                      '&:focus': { bgcolor: '#f1f3f4' }
+                    },
+                    '.MuiTablePagination-selectIcon': { color: '#5f6368' },
+                    '.MuiTablePagination-displayedRows': { color: '#5f6368' },
+                    '.MuiTablePagination-actions': {
+                      '& .MuiIconButton-root': {
+                        color: '#5f6368',
+                        '&:hover': { bgcolor: '#f1f3f4' },
+                        '&.Mui-disabled': { color: '#dadce0' }
+                      }
+                    }
+                  }}
+                />
+              </>
             )}
-          </div>
+          </>
         )}
-      </div>
-    </div>
+      </Card>
+      
+      {/* Action Menu */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        TransitionComponent={Fade}
+        elevation={2}
+        sx={{
+          '& .MuiPaper-root': {
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(60,64,67,.3)',
+            mt: 0.5
+          },
+          '& .MuiMenuItem-root': {
+            fontSize: '0.875rem',
+            py: 1,
+            px: 2,
+            '&:hover': { bgcolor: '#f1f3f4' }
+          }
+        }}
+      >
+        <MenuItem onClick={handleMenuView}>
+          <Eye size={16} style={{ marginRight: 8, color: '#5f6368' }} />
+          View Details
+        </MenuItem>
+        <MenuItem onClick={handleMenuEdit}>
+          <Edit size={16} style={{ marginRight: 8, color: '#5f6368' }} />
+          Edit
+        </MenuItem>
+        <MenuItem onClick={handleMenuDelete} sx={{ color: '#d93025' }}>
+          <Trash2 size={16} style={{ marginRight: 8 }} />
+          Delete
+        </MenuItem>
+      </Menu>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        PaperProps={{
+          sx: {
+            borderRadius: '8px',
+            boxShadow: '0 24px 38px 3px rgba(60,64,67,0.14), 0 9px 46px 8px rgba(60,64,67,0.12), 0 11px 15px -7px rgba(60,64,67,0.2)',
+            maxWidth: '400px'
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1, fontWeight: 500, color: '#202124' }}>
+          Delete employee
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: '#5f6368' }}>
+            Are you sure you want to delete the employee "{employeeToDelete?.fullName}"? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button 
+            onClick={handleDeleteCancel} 
+            sx={{ 
+              color: '#5f6368', 
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#f1f3f4' }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            variant="contained"
+            sx={{ 
+              bgcolor: '#d93025', 
+              color: 'white',
+              textTransform: 'none',
+              boxShadow: 'none',
+              '&:hover': { bgcolor: '#c5221f', boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 };
 
