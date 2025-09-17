@@ -42,11 +42,18 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password_hash, 10);
 
     try {
+      // Determine role based on email
+      let role = 'User';
+      if (email.includes('admin') || email.includes('director')) {
+        role = 'Admin';
+      }
+      
       // Create new user with TypeORM
       const newUser = this.userRepository.create({
         username,
         email: email.toLowerCase(),
         password_hash: hashedPassword,
+        role, // Set the default role
         // Optional fields can be added here if provided
         country_id: null,
         branch_id: null,
@@ -135,21 +142,34 @@ export class AuthService {
         // Continue without employee ID if there's an error
       }
 
-      // Determine if the user should have admin privileges
-      // Since the role column has been removed, we'll use a simple heuristic
-      let isAdmin = false;
+      // Check if the role is Admin (previously Director) by looking up the role permissions
+      let isAdmin = user.role === 'Admin' || user.role === 'Director'; // For backward compatibility
       
-      // Check if the user's email contains admin or director
-      if (user.email && (user.email.includes('admin') || user.email.includes('director'))) {
-        isAdmin = true;
+      // If the user doesn't have a role yet, assign one based on email
+      if (!user.role) {
+        if (user.email && (user.email.includes('admin') || user.email.includes('director'))) {
+          user.role = 'Admin';
+          isAdmin = true;
+          
+          // Save the assigned role
+          try {
+            await this.userRepository.update(user.id, { role: 'Admin' });
+            console.log(`Assigned Admin role to user ${user.id} based on email`);
+          } catch (error) {
+            console.error('Error saving role:', error);
+          }
+        } else {
+          user.role = 'User';
+          
+          // Save the assigned role
+          try {
+            await this.userRepository.update(user.id, { role: 'User' });
+            console.log(`Assigned User role to user ${user.id}`);
+          } catch (error) {
+            console.error('Error saving role:', error);
+          }
+        }
       }
-      
-      // In a real implementation, we would check the user_roles table to determine permissions
-      // But for now, we'll use this simple approach
-      
-      // Determine a role value to include in the token
-      // This is a temporary solution until proper role management is implemented
-      const userRole = isAdmin ? 'Admin' : 'User';
       
       const token = this.jwtService.sign(
         { 
@@ -159,7 +179,7 @@ export class AuthService {
           isUUID: isUUID,
           is_global: isAdmin,
           employeeId: employeeId,
-          role: userRole // Include the determined role
+          role: user.role // Use the user's role from the database
         }
       );
 
@@ -167,7 +187,7 @@ export class AuthService {
         status: "Success",
         message: "Login successful",
         token,
-        role: userRole, // Use the determined role
+        role: user.role, // Use the user's role from the database
         id: user.id,
         idType: 'uuid',
         context: {

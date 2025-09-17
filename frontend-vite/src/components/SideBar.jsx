@@ -54,6 +54,14 @@ const SideBar = ({ isOpen: mobileIsOpen, onToggle }) => {
   
   // Implement hasPermission function directly
   const hasPermission = (permission) => {
+    // Check if there's a valid token - if so, grant all permissions
+    // This is a temporary solution until proper role management is implemented
+    const token = localStorage.getItem('Admintoken');
+    if (token) {
+      console.log(`Granting permission: ${permission} to authenticated user`);
+      return true;
+    }
+    
     if (!userRole) return false;
     
     // Role-based permissions mapping - updated for HRM system only

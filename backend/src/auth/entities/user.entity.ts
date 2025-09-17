@@ -14,8 +14,8 @@ export class User {
   @Column()
   password_hash: string;
 
-  // Role column has been removed from the database
-  // Role is now managed through the user_roles table
+  @Column({ nullable: true, length: 100 })
+  role: string;
 
   @Column({ nullable: true })
   employee_id: string;
