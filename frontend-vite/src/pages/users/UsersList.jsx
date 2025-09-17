@@ -87,6 +87,8 @@ const UsersList = () => {
       setCustomRoles(roles);
     } catch (error) {
       console.error('Error fetching custom roles:', error);
+      // Set empty array instead of showing error to user
+      setCustomRoles([]);
     } finally {
       setLoadingRoles(false);
     }
@@ -370,7 +372,7 @@ const UsersList = () => {
                   <TableRow>
                     <TableCell>Name</TableCell>
                     <TableCell>Email</TableCell>
-                    <TableCell>Role</TableCell>
+                    <TableCell>Designation</TableCell>
                    
                     <TableCell align="right">Actions</TableCell>
                   </TableRow>
@@ -596,7 +598,7 @@ const UsersList = () => {
                   className="block text-gray-700 text-sm font-bold mb-2"
                   htmlFor="role"
                 >
-                  Role
+                  Designation
                 </label>
                 <select
                   id="role"
@@ -607,19 +609,16 @@ const UsersList = () => {
                     formErrors.role ? "border-red-500" : "border-gray-300"
                   } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
                 >
-                  <option value="">Select a role</option>
-                  <optgroup label="System Roles">
+                  <option value="">Select a designation</option>
+                  <optgroup label="System Designations">
                     <option value="Director">Director</option>
                     <option value="HR">HR</option>
                     <option value="DM">DM</option>
                     <option value="TC">TC</option>
-                    <option value="BA">BA - Branch Administration</option>
-                    <option value="RT">RT - Reservation and Ticketing</option>
-                    <option value="AC">AC - Accounts</option>
                   </optgroup>
                   
                   {customRoles.length > 0 && (
-                    <optgroup label="Custom Roles">
+                    <optgroup label="Custom Designations">
                       {customRoles.map(role => (
                         <option key={role.id} value={role.name}>
                           {role.name}

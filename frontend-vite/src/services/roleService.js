@@ -17,7 +17,8 @@ const getAllRoles = async () => {
     return response.data.data || [];
   } catch (error) {
     console.error('Error fetching roles:', error);
-    throw error;
+    // Return empty array instead of throwing error
+    return [];
   }
 };
 
@@ -28,7 +29,8 @@ const getRoleById = async (roleId) => {
     return response.data.data;
   } catch (error) {
     console.error(`Error fetching role with ID ${roleId}:`, error);
-    throw error;
+    // Return null instead of throwing error
+    return null;
   }
 };
 
@@ -109,9 +111,17 @@ const removeRoleFromLocalStorage = (roleId) => {
         
         // Save back to localStorage
         localStorage.setItem('customRoles', JSON.stringify(customRoles));
+      } else {
+        // If role data is null, try to clean up localStorage anyway
+        try {
+          const customRolesStr = localStorage.getItem('customRoles');
+          if (customRolesStr) {
+            localStorage.setItem('customRoles', customRolesStr); // Just re-save as is
+          }
+        } catch (e) {
+          console.error('Error cleaning up localStorage:', e);
+        }
       }
-    }).catch(error => {
-      console.error('Error getting role for removal from localStorage:', error);
     });
   } catch (error) {
     console.error('Error removing custom role from localStorage:', error);

@@ -56,14 +56,12 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
   const hasPermission = (permission) => {
     if (!userRole) return false;
     
-    // Role-based permissions mapping
+    // Role-based permissions mapping - updated for HRM system only
     const rolePermissions = {
-      Director: ['dashboard', 'leads', 'quotes', 'users', 'settings', 'hr', 'employees', 'attendance', 'payroll', 'custom_roles'],
-      DM: ['dashboard', 'leads', 'marketing', 'hr', 'employees', 'attendance', 'payroll'],
-      HR: ['hr', 'employees', 'attendance', 'payroll'],
-      BA: ['dashboard', 'leads', 'quotes', 'holiday'],
-      Marketing: ['dashboard', 'leads', 'campaigns'],
-      TC: ['dashboard', 'leads', 'quotes', 'hr', 'employees', 'attendance', 'payroll']
+      Director: ['dashboard', 'users', 'settings', 'hr', 'employees', 'attendance', 'payroll', 'leave'],
+      DM: ['dashboard', 'hr', 'employees', 'attendance', 'payroll', 'leave'],
+      HR: ['hr', 'employees', 'attendance', 'payroll', 'leave'],
+      TC: ['dashboard', 'hr', 'employees', 'attendance', 'payroll']
     };
     
     // Check for custom roles in localStorage
@@ -306,10 +304,10 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
                     {isOpen && <span>User List</span>}
                   </NavLink>
                   
-                  {/* Custom Roles */}
-                  {(userRole === "Director" || hasPermission("custom_roles")) && (
+                  {/* Designations */}
+                  {(userRole === "Director" || hasPermission("designations")) && (
                     <NavLink
-                      to="/users/custom-roles"
+                      to="/users/designations"
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                           isActive
@@ -319,7 +317,7 @@ const SideBar = ({ isOpen: mobileIsOpen }) => {
                       }
                     >
                       <Shield size={18} />
-                      {isOpen && <span>Custom Roles</span>}
+                      {isOpen && <span>Designations</span>}
                     </NavLink>
                   )}
                 </div>

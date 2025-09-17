@@ -89,7 +89,7 @@ const AddUser = () => {
     
     // Validate role
     if (!formData.role) {
-      errors.role = 'Role is required';
+      errors.role = 'Designation is required';
     }
     
     setFormErrors(errors);
@@ -255,7 +255,7 @@ const AddUser = () => {
               className="block text-gray-700 text-sm font-bold mb-2"
               htmlFor="role"
             >
-              Role
+              Designation
             </label>
             <select
               id="role"
@@ -266,8 +266,8 @@ const AddUser = () => {
                 formErrors.role ? "border-red-500" : "border-gray-300"
               } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-[#47BCCB]`}
             >
-              <option value="">Select a role</option>
-              <optgroup label="System Roles">
+              <option value="">Select a designation</option>
+              <optgroup label="System Designations">
                 <option value="Director">Director</option>
                 <option value="HR">HR</option>
                 <option value="DM">DM</option>
@@ -278,7 +278,7 @@ const AddUser = () => {
               </optgroup>
               
               {customRoles.length > 0 && (
-                <optgroup label="Custom Roles">
+                <optgroup label="Custom Designations">
                   {customRoles.map(role => (
                     <option key={role.id} value={role.name}>
                       {role.name}

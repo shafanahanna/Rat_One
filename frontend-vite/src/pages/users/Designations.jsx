@@ -61,20 +61,16 @@ const Designations = () => {
   const [formSuccess, setFormSuccess] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
 
-  // Available permissions
+  // Available permissions - updated for HRM system only
   const availablePermissions = [
     { id: 'dashboard', label: 'Dashboard' },
-    { id: 'leads', label: 'Leads Management' },
-    { id: 'quotes', label: 'Quotes' },
     { id: 'users', label: 'User Management' },
     { id: 'settings', label: 'Settings' },
     { id: 'hr', label: 'HR Access' },
     { id: 'employees', label: 'Employee Management' },
     { id: 'attendance', label: 'Attendance Management' },
     { id: 'payroll', label: 'Payroll' },
-    { id: 'marketing', label: 'Marketing' },
-    { id: 'holiday', label: 'Holiday Management' },
-    { id: 'campaigns', label: 'Campaigns' }
+    { id: 'leave', label: 'Leave Management' }
   ];
 
   useEffect(() => {
@@ -105,8 +101,8 @@ const Designations = () => {
         setFilteredRoles(response.data.data);
       }
     } catch (error) {
-      console.error('Error fetching roles:', error);
-      setError('Failed to fetch roles. Please try again later.');
+      console.error('Error fetching designations:', error);
+      setError('Failed to fetch designations. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -174,7 +170,7 @@ const Designations = () => {
     
     // Validate name
     if (!roleFormData.name.trim()) {
-      newErrors.name = 'Role name is required';
+      newErrors.name = 'Designation name is required';
       valid = false;
     }
     
@@ -226,8 +222,8 @@ const Designations = () => {
       }
       setRoleModalOpen(true);
     } catch (error) {
-      console.error('Error fetching role details:', error);
-      setError('Failed to fetch role details. Please try again later.');
+      console.error('Error fetching designation details:', error);
+      setError('Failed to fetch designation details. Please try again later.');
     } finally {
       setFormLoading(false);
     }
@@ -283,8 +279,8 @@ const Designations = () => {
       }, 1500);
       
     } catch (error) {
-      console.error('Error saving role:', error);
-      setError(error.response?.data?.message || 'Failed to save role. Please try again.');
+      console.error('Error saving designation:', error);
+      setError(error.response?.data?.message || 'Failed to save designation. Please try again.');
     } finally {
       setFormLoading(false);
     }
@@ -308,8 +304,8 @@ const Designations = () => {
       setRoles(roles.filter(role => role.id !== roleToDelete.id));
       setFilteredRoles(filteredRoles.filter(role => role.id !== roleToDelete.id));
     } catch (error) {
-      console.error('Error deleting role:', error);
-      setError('Failed to delete role. Please try again later.');
+      console.error('Error deleting designation:', error);
+      setError('Failed to delete designation. Please try again later.');
     } finally {
       setDeleteDialogOpen(false);
       setRoleToDelete(null);
@@ -631,4 +627,4 @@ const Designations = () => {
   );
 };
 
-export default CustomRoles;
+export default Designations;
