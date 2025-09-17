@@ -552,7 +552,7 @@ const Designations = () => {
                         py: 2
                       }}
                     >
-                      Description
+                      Department
                     </TableCell>
                     <TableCell 
                       sx={{ 
@@ -611,7 +611,10 @@ const Designations = () => {
                             </Box>
                           </TableCell>
                           <TableCell sx={{ color: '#5f6368' }}>
-                            {role.description || '—'}
+                            {role.departmentId ? 
+                              departments.find(d => d.id === role.departmentId)?.name || '—' : 
+                              '—'
+                            }
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
