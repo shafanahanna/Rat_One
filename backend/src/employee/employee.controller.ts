@@ -218,4 +218,32 @@ export class EmployeeController {
       );
     }
   }
+
+  /**
+   * Update salary status for an employee
+   */
+  @Put(':id/salary-status')
+  async updateSalaryStatus(@Param('id') id: string, @Body() body: { status: string }) {
+    try {
+      const { status } = body;
+      if (!status || !['Approved', 'Rejected', 'Pending'].includes(status)) {
+        throw new HttpException('Invalid salary status provided.', HttpStatus.BAD_REQUEST);
+      }
+      
+      const result = await this.employeeService.updateSalaryStatus(id, status);
+      return {
+        status: 'Success',
+        message: `Salary status updated to ${status} successfully`,
+        data: result
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        error.message || 'Failed to update salary status.',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 }
