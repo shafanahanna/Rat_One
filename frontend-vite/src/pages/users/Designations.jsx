@@ -52,7 +52,7 @@ import { PERMISSION_UI } from '../../constants/permissions';
 
 const Designations = () => {
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
   const [roles, setRoles] = useState([]);
   const [filteredRoles, setFilteredRoles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -319,11 +319,16 @@ const Designations = () => {
       return;
     }
     
-    // Ensure role name is properly trimmed
+    // Ensure role name is properly trimmed and remove empty departmentId
     const formData = {
       ...roleFormData,
       name: roleFormData.name.trim()
     };
+    
+    // Remove departmentId if it's empty to avoid UUID validation errors
+    if (!formData.departmentId) {
+      delete formData.departmentId;
+    }
     
     setFormLoading(true);
     

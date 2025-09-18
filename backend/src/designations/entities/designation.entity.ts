@@ -12,8 +12,8 @@ export class Designation {
   @Column({ nullable: true, type: 'text' })
   description: string;
 
-  @Column({ nullable: true, name: 'department_id' })
-  departmentId: string;
+  @Column({ nullable: true, name: 'department_id', default: null })
+  departmentId: string | null;
 
   @ManyToOne(() => Department, department => department.designations)
   @JoinColumn({ name: 'department_id' })

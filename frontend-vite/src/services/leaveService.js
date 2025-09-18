@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 // Create axios instance with auth token
 const axiosInstance = axios.create({
@@ -99,7 +99,7 @@ const createLeaveApplication = async (leaveApplicationData) => {
     try {
       const token = localStorage.getItem('Admintoken');
       const directResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/leave-management/leave-applications`, 
+        `${API_URL}/api/leave-management/leave-applications`, 
         leaveApplicationData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -284,7 +284,7 @@ const populateLeaveBalances = async (year) => {
     try {
       const token = localStorage.getItem('Admintoken');
       const directResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/leave-management/leave-balances/populate`, 
+        `${API_URL}/api/leave-management/leave-balances/populate`, 
         null,
         { 
           headers: { Authorization: `Bearer ${token}` },

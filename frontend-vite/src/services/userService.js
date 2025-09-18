@@ -8,7 +8,7 @@ const userService = {
   getAllUsers: async () => {
     try {
       const token = localStorage.getItem('Admintoken');
-      const response = await axios.get(`${API_URL}/api/api/users`, {
+      const response = await axios.get(`${API_URL}/api/users`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -24,7 +24,7 @@ const userService = {
   getUserById: async (userId) => {
     try {
       const token = localStorage.getItem('Admintoken');
-      const response = await axios.get(`${API_URL}/api/api/users/${userId}`, {
+      const response = await axios.get(`${API_URL}/api/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -40,7 +40,7 @@ const userService = {
   createUser: async (userData) => {
     try {
       const token = localStorage.getItem('Admintoken');
-      const response = await axios.post(`${API_URL}/api/api/users`, userData, {
+      const response = await axios.post(`${API_URL}/api/users`, userData, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -56,7 +56,7 @@ const userService = {
   updateUser: async (userId, userData) => {
     try {
       const token = localStorage.getItem('Admintoken');
-      const response = await axios.put(`${API_URL}/api/api/users/${userId}`, userData, {
+      const response = await axios.put(`${API_URL}/api/users/${userId}`, userData, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -72,7 +72,7 @@ const userService = {
   deleteUser: async (userId) => {
     try {
       const token = localStorage.getItem('Admintoken');
-      const response = await axios.delete(`${API_URL}/api/api/users/${userId}`, {
+      const response = await axios.delete(`${API_URL}/api/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
