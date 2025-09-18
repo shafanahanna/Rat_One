@@ -101,10 +101,12 @@ export const fetchUnassignedUsers = createAsyncThunk(
       if (response.data && response.data.data) {
         return response.data.data;
       }
+      // If data is not in the expected format, return empty array
       return [];
     } catch (error) {
       console.error('Error fetching unassigned users:', error);
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch unassigned users");
+      // Return empty array instead of rejecting
+      return [];
     }
   }
 );

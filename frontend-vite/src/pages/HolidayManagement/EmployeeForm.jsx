@@ -42,14 +42,9 @@ const AddEmployee = () => {
 
     useEffect(() => {
         console.log('Dispatching fetchUnassignedUsers action');
-        dispatch(fetchUnassignedUsers())
-            .unwrap()
-            .then(result => {
-                console.log('Unassigned users fetched successfully:', result);
-            })
-            .catch(error => {
-                console.error('Error fetching unassigned users:', error);
-            });
+        // Just dispatch the action without trying to unwrap the result
+        // The slice will handle errors and always return at least an empty array
+        dispatch(fetchUnassignedUsers());
     }, [dispatch]);
 
     useEffect(() => {

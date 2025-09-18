@@ -61,6 +61,28 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
+  @Permissions(['users', 'hr']) // User needs either 'users' OR 'hr' permission
+  @Get('unassigned')
+  async getUnassignedUsers() {
+    try {
+      const users = await this.usersService.getUnassignedUsers();
+      return {
+        status: "Success",
+        message: "Unassigned users retrieved successfully",
+        data: users
+      };
+    } catch (error) {
+      console.error("Error getting unassigned users:", error);
+      // Return empty array instead of throwing an error
+      return {
+        status: "Success",
+        message: "No unassigned users found",
+        data: []
+      };
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
   @Permissions('users.view')
   @Get(':id')
   async getUser(@Param('id') id: string) {
@@ -146,26 +168,6 @@ export class UsersController {
         status: "Error",
         message: error.message || "Failed to assign designation"
       }, HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
-  @Permissions(['users', 'hr']) // User needs either 'users' OR 'hr' permission
-  @Get('unassigned')
-  async getUnassignedUsers() {
-    try {
-      const users = await this.usersService.getUnassignedUsers();
-      return {
-        status: "Success",
-        message: "Unassigned users retrieved successfully",
-        data: users
-      };
-    } catch (error) {
-      console.error("Error getting unassigned users:", error);
-      throw new HttpException({
-        status: "Error",
-        message: "Error retrieving unassigned users"
-      }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

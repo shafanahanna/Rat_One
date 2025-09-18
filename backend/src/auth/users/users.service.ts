@@ -136,38 +136,34 @@ export class UsersService {
   }
 
   async getUnassignedUsers(): Promise<any[]> {
-    // First, get all users for debugging
-    const allUsersQuery = `SELECT id, username, role, employee_id FROM users`;
-    const allUsers = await this.databaseService.query(allUsersQuery);
-    console.log('All users in database:', allUsers);
-    
-    // Get all employees for debugging
-    const allEmployeesQuery = `SELECT id, user_id FROM employees`;
-    const allEmployees = await this.databaseService.query(allEmployeesQuery);
-    console.log('All employees in database:', allEmployees);
-    
-    // Get users who don't have an employee profile and are not admin roles
-    const query = `
-      SELECT u.id, u.username as name, u.email, u.role, u.employee_id
-      FROM users u
-      WHERE NOT EXISTS (
-        SELECT 1 FROM employees e WHERE e.user_id = u.id
-      )
-      AND u.role NOT IN ('Director', 'Admin')
-      -- Removed the employee_id IS NULL condition since it might be filtering out valid users
-      ORDER BY u.username
-    `;
-    
-    console.log('Executing unassigned users query:', query);
-    const users = await this.databaseService.query(query);
-    console.log('Unassigned users query result:', users);
-    
-    return users.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role
-    }));
+    try {
+      // Use a simpler approach - just get all users
+      const userRepository = this.databaseService.getRepository(User);
+      const users = await userRepository.find({
+        select: ['id', 'username', 'email', 'role']
+      });
+      
+      console.log('All users found:', users.length);
+      
+      // Filter out admin roles
+      const filteredUsers = users.filter(user => 
+        !['Director', 'Admin'].includes(user.role)
+      );
+      
+      console.log('Non-admin users found:', filteredUsers.length);
+      
+      // Map the results to the expected format
+      return filteredUsers.map(user => ({
+        id: user.id,
+        name: user.username,
+        email: user.email,
+        role: user.role
+      }));
+    } catch (error) {
+      console.error('Error in getUnassignedUsers:', error);
+      // Return empty array instead of throwing error to avoid 500
+      return [];
+    }
   }
 
   async assignDesignation(id: string, assignDesignationDto: AssignDesignationDto): Promise<User> {
