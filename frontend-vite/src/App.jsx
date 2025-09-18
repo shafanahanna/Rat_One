@@ -22,6 +22,7 @@ import ProfilePage from './pages/Profile/ProfilePage';
 import LeaveManagement from './pages/HolidayManagement/LeaveManagement';
 import LeaveBalanceManagement from './pages/HolidayManagement/Components/LeaveBalanceManagement';
 import LeaveConfiguration from './pages/HolidayManagement/LeaveConfiguration';
+import SalaryManagement from './pages/HolidayManagement/SalaryManagement';
 
 // HR Module imports
 
@@ -271,7 +272,14 @@ function App() {
             } 
           />
 
-
+          <Route 
+            path="/hr/salary-management" 
+            element={
+              <RoleProtectedRoute allowedRoles={['HR', 'Admin', 'Director', 'TC', 'DM']}>
+                <SalaryManagement />
+              </RoleProtectedRoute>
+            } 
+          />
           
 
 
