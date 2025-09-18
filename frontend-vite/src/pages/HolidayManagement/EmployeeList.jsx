@@ -157,6 +157,8 @@ const EmployeeList = () => {
   };
 
   const handleUpdateSalaryStatus = (employeeId, status) => {
+    console.log(`Updating salary status for employee ${employeeId} to ${status}`);
+    console.log(`Current user role: ${userRole}`);
     dispatch(updateSalaryStatusThunk({ id: employeeId, status }));
   };
 
@@ -180,6 +182,36 @@ const EmployeeList = () => {
 
   const SalaryStatus = ({ employee }) => {
     const isMobile = useIsMobile();
+    
+    // Debug employee data
+    console.log('Employee in SalaryStatus:', employee);
+    console.log('Employee salary_status:', employee.salary_status);
+    console.log('Employee salaryStatus:', employee.salaryStatus);
+    console.log('Employee proposed_salary:', employee.proposed_salary);
+    console.log('Employee proposedSalary:', employee.proposedSalary);
+    
+    // Get the salary status, handling both snake_case and camelCase property names
+    const getSalaryStatus = () => {
+      // Check for both property naming conventions
+      if (employee.salary_status) {
+        return employee.salary_status;
+      } else if (employee.salaryStatus) {
+        return employee.salaryStatus;
+      }
+      // Default to 'Approved' if not found
+      return 'Approved';
+    };
+    
+    // Get the proposed salary, handling both snake_case and camelCase property names
+    const getProposedSalary = () => {
+      if (employee.proposed_salary) {
+        return employee.proposed_salary;
+      } else if (employee.proposedSalary) {
+        return employee.proposedSalary;
+      }
+      return 0;
+    };
+    
     const statusMap = {
       Pending: { 
         icon: Clock, 
@@ -201,7 +233,11 @@ const EmployeeList = () => {
       },
     };
 
-    const currentStatus = statusMap[employee.salary_status] || {
+    // Get the current status using our helper function
+    const status = getSalaryStatus();
+    console.log(`Employee ${employee.id} salary status:`, status);
+    
+    const currentStatus = statusMap[status] || {
       icon: null,
       bgColor: '#f1f3f4',
       textColor: '#5f6368',
@@ -231,13 +267,13 @@ const EmployeeList = () => {
           }}
         />
         
-        {!isMobile && employee.salary_status === 'Pending' && (
+        {!isMobile && status === 'Pending' && (
           <Typography variant="caption" sx={{ color: '#5f6368' }}>
-            Proposed: ₹{employee.proposed_salary}
+            Proposed: ₹{getProposedSalary()}
           </Typography>
         )}
         
-        {userRole === 'Director' && employee.salary_status === 'Pending' && (
+        {userRole === 'Admin' && status === 'Pending' && (
           <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
             <IconButton
               size="small"

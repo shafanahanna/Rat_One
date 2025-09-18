@@ -246,8 +246,15 @@ export const updateSalaryStatus = createAsyncThunk(
   'employees/updateSalaryStatus',
   async ({ id, status }, { rejectWithValue }) => {
     try {
+      console.log(`updateSalaryStatus thunk called with id=${id}, status=${status}`);
       const token = localStorage.getItem('Admintoken');
-      const response = await axios.put(`${API_URL}/api/employees/${id}/salary-status`, 
+      console.log('Token exists:', !!token);
+      
+      // Log the API URL being used
+      const url = `${API_URL}/api/employees/${id}/salary-status`;
+      console.log('Making request to URL:', url);
+      
+      const response = await axios.put(url, 
         { status },
         {
           headers: {
@@ -257,12 +264,18 @@ export const updateSalaryStatus = createAsyncThunk(
         }
       );
       
+      console.log('Salary status update response:', response.data);
+      
       if (response.data.status === 'Success') {
+        console.log('Salary status update successful');
         return { id, status };
       } else {
+        console.error('Salary status update failed:', response.data.message);
         return rejectWithValue(response.data.message || 'Failed to update salary status');
       }
     } catch (error) {
+      console.error('Error updating salary status:', error);
+      console.error('Error details:', error.response?.data);
       return rejectWithValue(error.response?.data?.message || 'Network error');
     }
   }

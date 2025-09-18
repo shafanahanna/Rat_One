@@ -133,7 +133,7 @@ export class EmployeeService {
         .leftJoinAndSelect('e.branch', 'b')
         .select([
           'e.id', 'e.fullName', 'e.designation', 'e.department', 
-          'e.salary', 'e.dateOfJoining', 'e.empCode',
+          'e.salary', 'e.dateOfJoining', 'e.empCode', 'e.salaryStatus', 'e.proposedSalary',
           'u.id',  'u.email', 'u.role',
           'b.id', 
         ])
@@ -174,10 +174,14 @@ export class EmployeeService {
           }
         }
 
+        // Add snake_case versions of camelCase properties
         return {
           ...employee,
           department: departmentName,
-          designation: designationName
+          designation: designationName,
+          // Add snake_case versions of camelCase properties for frontend compatibility
+          salary_status: employee.salaryStatus,
+          proposed_salary: employee.proposedSalary
         };
       }));
 
@@ -200,7 +204,7 @@ export class EmployeeService {
         .leftJoinAndSelect('e.branch', 'b')
         .select([
           'e.id', 'e.fullName', 'e.designation', 'e.department', 
-          'e.salary', 'e.dateOfJoining', 'e.empCode',
+          'e.salary', 'e.dateOfJoining', 'e.empCode', 'e.salaryStatus', 'e.proposedSalary',
           'u.id',  'u.email', 'u.role',
           'b.id', 
         ])
@@ -249,7 +253,10 @@ export class EmployeeService {
       const employeeData = {
         ...employee,
         department: departmentName,
-        designation: designationName
+        designation: designationName,
+        // Add snake_case versions of camelCase properties for frontend compatibility
+        salary_status: employee.salaryStatus,
+        proposed_salary: employee.proposedSalary
       };
 
       return {
@@ -430,6 +437,47 @@ export class EmployeeService {
     }
 
     return empCode;
+  }
+
+  /**
+   * Update salary status for an employee
+   * @param id Employee ID
+   * @param status New salary status (Approved, Rejected, Pending)
+   * @returns Updated employee data
+   */
+  async updateSalaryStatus(id: string, status: string): Promise<any> {
+    // Check if employee exists
+    const employee = await this.employeeRepository.findOne({ where: { id } });
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
+    // Start a transaction
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Update salary status
+      employee.salaryStatus = status;
+
+      // If approved, update the actual salary with the proposed salary
+      if (status === 'Approved' && employee.proposedSalary) {
+        employee.salary = employee.proposedSalary;
+      }
+
+      // Save the updated employee
+      const updatedEmployee = await queryRunner.manager.save(employee);
+      await queryRunner.commitTransaction();
+
+      return updatedEmployee;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.error('Error updating salary status:', error);
+      throw new InternalServerErrorException(`Failed to update salary status: ${error.message}`);
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   /**
@@ -653,7 +701,7 @@ export class EmployeeService {
         .leftJoinAndSelect('e.branch', 'b')
         .select([
           'e.id', 'e.fullName', 'e.designation', 'e.department', 
-          'e.salary', 'e.dateOfJoining', 'e.empCode', 'e.userId',
+          'e.salary', 'e.dateOfJoining', 'e.empCode', 'e.userId', 'e.salaryStatus', 'e.proposedSalary',
           'u.id', 'u.email', 'u.role',
           'b.id', 'b.branch_name'
         ])
@@ -664,7 +712,12 @@ export class EmployeeService {
         throw new NotFoundException(`Employee not found for user ID: ${userId}`);
       }
 
-      return employee;
+      // Add snake_case versions of camelCase properties for frontend compatibility
+      return {
+        ...employee,
+        salary_status: employee.salaryStatus,
+        proposed_salary: employee.proposedSalary
+      };
     } catch (error) {
       console.error('Error finding employee by user ID:', error);
       if (error instanceof NotFoundException) {
