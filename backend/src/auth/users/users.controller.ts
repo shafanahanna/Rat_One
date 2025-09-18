@@ -7,7 +7,7 @@ import { UsersService } from './users.service';
 import { Permissions } from '../decorators/permissions.decorator';
 import { DesignationPermissionGuard } from '../guards/designation-permission.guard';
 
-@Controller('api/users')
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

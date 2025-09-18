@@ -1,6 +1,9 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 
+// Get API URL from environment variables
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 // Create auth context
 const AuthContext = createContext();
 
@@ -60,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      const response = await axios.post('http://localhost:4000/api/auth/login', {
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password_hash: password
       });
@@ -94,7 +97,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      const response = await axios.post('http://localhost:4000/api/auth/register', userData);
+      const response = await axios.post(`${API_URL}/api/auth/register`, userData);
       return { success: true };
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');

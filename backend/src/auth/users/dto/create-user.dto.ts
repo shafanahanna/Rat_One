@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -16,4 +16,8 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty({ message: 'Role is required' })
   role: string;
+  
+  @IsOptional()
+  @IsUUID()
+  designationId?: string;
 }

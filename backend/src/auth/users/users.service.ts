@@ -53,7 +53,7 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<any> {
-    const { name, email, password, role } = createUserDto;
+    const { name, email, password, role, designationId } = createUserDto;
     
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -61,12 +61,39 @@ export class UsersService {
     // Using TypeORM repository
     const userRepository = this.databaseService.getRepository(User);
     
+    // Create user object with basic info
     const newUser = userRepository.create({
       username: name,
       email: email.toLowerCase(),
       password_hash: hashedPassword,
       role
     });
+    
+    // If designationId is provided, set it
+    if (designationId) {
+      newUser.designationId = designationId;
+    }
+    // If no designationId is provided but role is, try to find the designation by name
+    else if (role) {
+      try {
+        // Import the Designation entity
+        const { Designation } = await import('../../designations/entities/designation.entity');
+        
+        // Get the designation repository
+        const designationRepository = this.databaseService.getRepository(Designation);
+        
+        // Try to find a designation with the given name
+        const designation = await designationRepository.findOne({ where: { name: role } });
+        
+        // If found, set the designationId
+        if (designation) {
+          newUser.designationId = designation.id;
+        }
+      } catch (error) {
+        console.error('Error finding designation by name:', error);
+        // Continue without setting designationId if there's an error
+      }
+    }
     
     const savedUser = await userRepository.save(newUser);
     
@@ -76,6 +103,7 @@ export class UsersService {
       name: savedUser.username,
       email: savedUser.email,
       role: savedUser.role,
+      designationId: savedUser.designationId,
       created_at: savedUser.created_at
     };
   }
@@ -99,6 +127,33 @@ export class UsersService {
     
     if (updateUserDto.role) {
       user.role = updateUserDto.role;
+      
+      // If role is updated, try to find and update designationId
+      if (!updateUserDto.designationId) {
+        try {
+          // Import the Designation entity
+          const { Designation } = await import('../../designations/entities/designation.entity');
+          
+          // Get the designation repository
+          const designationRepository = this.databaseService.getRepository(Designation);
+          
+          // Try to find a designation with the given name
+          const designation = await designationRepository.findOne({ where: { name: updateUserDto.role } });
+          
+          // If found, set the designationId
+          if (designation) {
+            user.designationId = designation.id;
+          }
+        } catch (error) {
+          console.error('Error finding designation by name:', error);
+          // Continue without setting designationId if there's an error
+        }
+      }
+    }
+    
+    // Explicitly set designationId if provided
+    if (updateUserDto.designationId) {
+      user.designationId = updateUserDto.designationId;
     }
     
     if (updateUserDto.password) {
@@ -114,6 +169,7 @@ export class UsersService {
       name: updatedUser.username,
       email: updatedUser.email,
       role: updatedUser.role,
+      designationId: updatedUser.designationId,
       created_at: updatedUser.created_at,
       updated_at: updatedUser.updated_at
     };
@@ -141,7 +197,7 @@ export class UsersService {
       // Use a simpler approach - just get all users
       const userRepository = this.databaseService.getRepository(User);
       const users = await userRepository.find({
-        select: ['id', 'username', 'email', 'role']
+        select: ['id', 'username', 'email', 'role', 'designationId']
       });
       
       console.log('All users found:', users.length);
@@ -158,7 +214,8 @@ export class UsersService {
         id: user.id,
         name: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        designationId: user.designationId
       }));
     } catch (error) {
       console.error('Error in getUnassignedUsers:', error);

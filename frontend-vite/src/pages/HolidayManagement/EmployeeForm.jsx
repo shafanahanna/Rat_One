@@ -5,29 +5,19 @@ import { fetchUnassignedUsers } from '../../redux/slices/usersSlice';
 
 import axios from 'axios';
 
-const designationOptions = [
-    "Digital Marketing Executive",
-    "Travel Consultant",
-    "HR Manager",
-    "Accountant",
-    "Branch Assistant",
-    "Branch Associate",
-    "Ticketing & Reservation"
-];
-
-const departmentOptions = [
-    "Holidays",
-    "Reservation",
-    "Finance",
-    "Marketing",
-    "Human Resources",
-    "Administration"
-];
-
 const AddEmployee = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { unassignedUsers, unassignedUsersLoading, unassignedUsersError } = useSelector(state => state.users);
+    
+    // State for designations and departments
+    const [designations, setDesignations] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [loadingDesignations, setLoadingDesignations] = useState(false);
+    const [loadingDepartments, setLoadingDepartments] = useState(false);
+    const [designationError, setDesignationError] = useState(null);
+    const [departmentError, setDepartmentError] = useState(null);
+    
     const [formData, setFormData] = useState({
         user_id: '',
         full_name: '',
@@ -50,43 +40,210 @@ const AddEmployee = () => {
     useEffect(() => {
         console.log('Current unassignedUsers state:', unassignedUsers);
     }, [unassignedUsers]);
+    
+    // Log form data changes
+    useEffect(() => {
+        console.log('Form data updated:', formData);
+    }, [formData]);
+    
+    // Fetch designations from API
+    useEffect(() => {
+        const fetchDesignations = async () => {
+            setLoadingDesignations(true);
+            setDesignationError(null);
+            try {
+                const token = localStorage.getItem('Admintoken');
+                const designationsApiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/api/designations`;
+                console.log('Fetching designations from:', designationsApiUrl);
+                
+                const response = await axios.get(designationsApiUrl, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                console.log('Designations API response:', response.data);
+                
+                if (response.data && response.data.data) {
+                    console.log('Designations loaded:', response.data.data.length);
+                    console.log('First few designations:', response.data.data.slice(0, 3));
+                    setDesignations(response.data.data);
+                } else {
+                    console.log('No designations data found in response');
+                    setDesignations([]);
+                }
+            } catch (error) {
+                console.error('Error fetching designations:', error);
+                setDesignationError('Failed to fetch designations');
+                setDesignations([]);
+            } finally {
+                setLoadingDesignations(false);
+            }
+        };
+        
+        fetchDesignations();
+    }, []);
+    
+    // Fetch departments from API
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            setLoadingDepartments(true);
+            setDepartmentError(null);
+            try {
+                const token = localStorage.getItem('Admintoken');
+                const departmentsApiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/api/departments`;
+                console.log('Fetching departments from:', departmentsApiUrl);
+                
+                const response = await axios.get(departmentsApiUrl, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                console.log('Departments API response:', response.data);
+                
+                if (response.data && response.data.data) {
+                    console.log('Departments loaded:', response.data.data.length);
+                    console.log('First few departments:', response.data.data.slice(0, 3));
+                    setDepartments(response.data.data);
+                } else {
+                    console.log('No departments data found in response');
+                    setDepartments([]);
+                }
+            } catch (error) {
+                console.error('Error fetching departments:', error);
+                setDepartmentError('Failed to fetch departments');
+                setDepartments([]);
+            } finally {
+                setLoadingDepartments(false);
+            }
+        };
+        
+        fetchDepartments();
+    }, []);
 
+    // Function to fetch designation details and get the department
+    const fetchDesignationDetails = (designationId) => {
+        if (!designationId) {
+            console.log('No designationId provided to fetchDesignationDetails');
+            return;
+        }
+        
+        console.log('Fetching designation details for ID:', designationId);
+        const token = localStorage.getItem('Admintoken');
+        const designationApiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/api/designations/${designationId}`;
+        console.log('Designation API URL:', designationApiUrl);
+        
+        axios.get(designationApiUrl, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(response => {
+            console.log('Designation details response:', response.data);
+            if (response.data && response.data.data) {
+                console.log('Designation data:', response.data.data);
+                if (response.data.data.departmentId) {
+                    const departmentId = response.data.data.departmentId;
+                    console.log('Found departmentId:', departmentId);
+                    // If designation has a department, update the form
+                    setFormData(prev => {
+                        console.log('Updating form with department:', departmentId);
+                        return {
+                            ...prev,
+                            department: departmentId
+                        };
+                    });
+                } else {
+                    console.log('No departmentId found for designation');
+                }
+            } else {
+                console.log('Invalid designation response format or no data');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching designation details:', error);
+        });
+    };
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         if (name === "user_id") {
-          const selectedUser = unassignedUsers.find(
-            (user) => user.id.toString() === value
-          );
-          
-          // First update the basic user info
-          setFormData((prev) => ({
-            ...prev,
-            user_id: value,
-            full_name: selectedUser ? selectedUser.name : "",
-          }));
-          
-          // If user is selected, check if they have a designation already
-          if (selectedUser && selectedUser.id) {
-            // Fetch user details to get their designation if available
-            const token = localStorage.getItem('Admintoken');
-            axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/api/users/${selectedUser.id}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            })
-            .then(response => {
-              if (response.data && response.data.data && response.data.data.designationId) {
-                // If user has a designation, update the form
-                setFormData(prev => ({
-                  ...prev,
-                  designation: response.data.data.designationId
-                }));
-              }
-            })
-            .catch(error => {
-              console.error('Error fetching user details:', error);
-            });
-          }
+            const selectedUser = unassignedUsers.find(
+                (user) => user.id.toString() === value
+            );
+            
+            // First update the basic user info
+            setFormData((prev) => ({
+                ...prev,
+                user_id: value,
+                full_name: selectedUser ? selectedUser.name : "",
+            }));
+            
+            // If user is selected, check if they have a designation already
+            if (selectedUser && selectedUser.id) {
+                console.log('Selected user:', selectedUser);
+                
+                // Check if the selected user already has a designationId
+                if (selectedUser.designationId) {
+                    console.log('User has designationId:', selectedUser.designationId);
+                    
+                    // Update the form with the designation
+                    setFormData(prev => {
+                        console.log('Updating form with designation from user object:', selectedUser.designationId);
+                        return {
+                            ...prev,
+                            designation: selectedUser.designationId
+                        };
+                    });
+                    
+                    // Also fetch the department for this designation
+                    fetchDesignationDetails(selectedUser.designationId);
+                } else {
+                    console.log('No designationId in the selected user object, fetching from API');
+                    
+                    // Fetch user details to get their designation if available
+                    const token = localStorage.getItem('Admintoken');
+                    const userApiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/api/users/${selectedUser.id}`;
+                    console.log('Fetching user details from:', userApiUrl);
+                    
+                    axios.get(userApiUrl, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    })
+                    .then(response => {
+                        console.log('User details response:', response.data);
+                        if (response.data && response.data.data) {
+                            console.log('User data:', response.data.data);
+                            if (response.data.data.designationId) {
+                                const designationId = response.data.data.designationId;
+                                console.log('Found designationId from API:', designationId);
+                                // If user has a designation, update the form
+                                setFormData(prev => {
+                                    console.log('Updating form with designation from API:', designationId);
+                                    return {
+                                        ...prev,
+                                        designation: designationId
+                                    };
+                                });
+                                
+                                // Also fetch the department for this designation
+                                fetchDesignationDetails(designationId);
+                            } else {
+                                console.log('No designationId found for user in API response');
+                            }
+                        } else {
+                            console.log('Invalid response format or no data');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user details:', error);
+                    });
+                }
+            }
+        } else if (name === "designation") {
+            // Update the designation in the form data
+            setFormData((prev) => ({ ...prev, [name]: value }));
+            
+            // If a designation is selected, fetch its department
+            if (value) {
+                fetchDesignationDetails(value);
+            }
         } else {
-          setFormData((prev) => ({ ...prev, [name]: value }));
+            setFormData((prev) => ({ ...prev, [name]: value }));
         }
     };
 
@@ -248,12 +405,24 @@ const AddEmployee = () => {
                             onChange={handleChange}
                             className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                             required
+                            disabled={loadingDesignations}
                         >
                             <option value="">-- Select Designation --</option>
-                            {designationOptions.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                            ))}
+                            {loadingDesignations ? (
+                                <option disabled>Loading designations...</option>
+                            ) : designations.length > 0 ? (
+                                (() => {
+                                    console.log('Rendering designations dropdown with:', designations);
+                                    console.log('Current designation value in form:', formData.designation);
+                                    return designations.map(designation => (
+                                        <option key={designation.id} value={designation.id}>{designation.name}</option>
+                                    ));
+                                })()
+                            ) : (
+                                <option disabled>No designations available</option>
+                            )}
                         </select>
+                        {designationError && <p className="mt-1 text-sm text-red-600">{designationError}</p>}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -265,12 +434,20 @@ const AddEmployee = () => {
                             onChange={handleChange}
                             className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                             required
+                            disabled={loadingDepartments}
                         >
                             <option value="">-- Select Department --</option>
-                            {departmentOptions.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                            ))}
+                            {loadingDepartments ? (
+                                <option disabled>Loading departments...</option>
+                            ) : departments.length > 0 ? (
+                                departments.map(department => (
+                                    <option key={department.id} value={department.id}>{department.name}</option>
+                                ))
+                            ) : (
+                                <option disabled>No departments available</option>
+                            )}
                         </select>
+                        {departmentError && <p className="mt-1 text-sm text-red-600">{departmentError}</p>}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -4,7 +4,7 @@ import { PermissionsService } from './permissions.service';
 import { DesignationPermissionGuard } from '../guards/designation-permission.guard';
 import { Permissions } from '../decorators/permissions.decorator';
 
-@Controller('api/permissions')
+@Controller('permissions')
 @UseGuards(JwtAuthGuard)
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}

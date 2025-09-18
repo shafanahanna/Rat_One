@@ -18,6 +18,7 @@ const AddUser = () => {
     password: '',
     confirmPassword: '',
     role: '',
+    designationId: '',
   });
 
   // Form validation
@@ -46,10 +47,24 @@ const AddUser = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    
+    // Special handling for role selection to also set designationId
+    if (name === 'role') {
+      // Find the selected role in customRoles
+      const selectedRole = customRoles.find(role => role.name === value);
+      
+      setFormData({
+        ...formData,
+        [name]: value,
+        // If a custom role is selected, set its ID as designationId
+        designationId: selectedRole ? selectedRole.id : ''
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
     
     // Clear error when user types
     if (formErrors[name]) {
@@ -120,6 +135,7 @@ const AddUser = () => {
         password: '',
         confirmPassword: '',
         role: '',
+        designationId: '',
       });
       
       // Redirect to users list after a short delay
