@@ -13,6 +13,13 @@ import { SyncDesignationService } from './sync-designation.service';
 
 @Injectable()
 export class EmployeeService {
+  // UUID validation regex
+  private readonly UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  // Helper function to validate UUID format
+  private isValidUUID(id: string): boolean {
+    return typeof id === 'string' && this.UUID_REGEX.test(id);
+  }
   constructor(
     @InjectRepository(Employee)
     private employeeRepository: Repository<Employee>,
@@ -118,56 +125,144 @@ export class EmployeeService {
   }
 
   async findAll(): Promise<any> {
-    // Get all employees with user info and branch name
-    const employees = await this.employeeRepository
-      .createQueryBuilder('e')
-      .leftJoinAndSelect('e.user', 'u')
-      .leftJoinAndSelect('e.branch', 'b')
-      .select([
-        'e.id', 'e.fullName', 'e.designation', 'e.department', 
-        'e.salary', 'e.dateOfJoining', 'e.empCode',
-        'u.id',  'u.email', 'u.role',
-        'b.id', 
-      ])
-      .getMany();
+    try {
+      // Get all employees with user info and branch name
+      const employees = await this.employeeRepository
+        .createQueryBuilder('e')
+        .leftJoinAndSelect('e.user', 'u')
+        .leftJoinAndSelect('e.branch', 'b')
+        .select([
+          'e.id', 'e.fullName', 'e.designation', 'e.department', 
+          'e.salary', 'e.dateOfJoining', 'e.empCode',
+          'u.id',  'u.email', 'u.role',
+          'b.id', 
+        ])
+        .getMany();
 
-    // Return the employees without trip data
-    const enrichedData = employees;
+      // Enrich the data with department and designation names
+      const enrichedData = await Promise.all(employees.map(async (employee) => {
+        let departmentName = employee.department;
+        let designationName = employee.designation;
 
-    return {
-      status: 'Success',
-      data: enrichedData
-    };
+        // If department is a UUID, try to get the department name
+        if (employee.department && this.isValidUUID(employee.department)) {
+          try {
+            const departmentResult = await this.dataSource.query(
+              'SELECT name FROM departments WHERE id = $1',
+              [employee.department]
+            );
+            if (departmentResult && departmentResult.length > 0) {
+              departmentName = departmentResult[0].name;
+            }
+          } catch (error) {
+            console.error('Error fetching department name:', error);
+          }
+        }
+
+        // If designation is a UUID, try to get the designation name
+        if (employee.designation && this.isValidUUID(employee.designation)) {
+          try {
+            const designationResult = await this.dataSource.query(
+              'SELECT name FROM designations WHERE id = $1',
+              [employee.designation]
+            );
+            if (designationResult && designationResult.length > 0) {
+              designationName = designationResult[0].name;
+            }
+          } catch (error) {
+            console.error('Error fetching designation name:', error);
+          }
+        }
+
+        return {
+          ...employee,
+          department: departmentName,
+          designation: designationName
+        };
+      }));
+
+      return {
+        status: 'Success',
+        data: enrichedData
+      };
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      throw new InternalServerErrorException('Failed to fetch employees');
+    }
   }
 
   async findOne(id: string): Promise<any> {
-    // Get employee with user info and branch name
-    const employee = await this.employeeRepository
-      .createQueryBuilder('e')
-      .leftJoinAndSelect('e.user', 'u')
-      .leftJoinAndSelect('e.branch', 'b')
-      .select([
-        'e.id', 'e.fullName', 'e.designation', 'e.department', 
-        'e.salary', 'e.dateOfJoining', 'e.empCode',
-        'u.id',  'u.email', 'u.role',
-        'b.id', 
-      ])
-      .where('e.id = :id', { id })
-      .getOne();
+    try {
+      // Get employee with user info and branch name
+      const employee = await this.employeeRepository
+        .createQueryBuilder('e')
+        .leftJoinAndSelect('e.user', 'u')
+        .leftJoinAndSelect('e.branch', 'b')
+        .select([
+          'e.id', 'e.fullName', 'e.designation', 'e.department', 
+          'e.salary', 'e.dateOfJoining', 'e.empCode',
+          'u.id',  'u.email', 'u.role',
+          'b.id', 
+        ])
+        .where('e.id = :id', { id })
+        .getOne();
 
-    if (!employee) {
-      throw new NotFoundException('Employee not found');
+      if (!employee) {
+        throw new NotFoundException('Employee not found');
+      }
+
+      // Enrich with department and designation names
+      let departmentName = employee.department;
+      let designationName = employee.designation;
+
+      // If department is a UUID, try to get the department name
+      if (employee.department && this.isValidUUID(employee.department)) {
+        try {
+          const departmentResult = await this.dataSource.query(
+            'SELECT name FROM departments WHERE id = $1',
+            [employee.department]
+          );
+          if (departmentResult && departmentResult.length > 0) {
+            departmentName = departmentResult[0].name;
+          }
+        } catch (error) {
+          console.error('Error fetching department name:', error);
+        }
+      }
+
+      // If designation is a UUID, try to get the designation name
+      if (employee.designation && this.isValidUUID(employee.designation)) {
+        try {
+          const designationResult = await this.dataSource.query(
+            'SELECT name FROM designations WHERE id = $1',
+            [employee.designation]
+          );
+          if (designationResult && designationResult.length > 0) {
+            designationName = designationResult[0].name;
+          }
+        } catch (error) {
+          console.error('Error fetching designation name:', error);
+        }
+      }
+
+      // Return employee data with resolved names
+      const employeeData = {
+        ...employee,
+        department: departmentName,
+        designation: designationName
+      };
+
+      return {
+        status: 'Success',
+        data: employeeData
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error fetching employee:', error);
+      throw new InternalServerErrorException('Failed to fetch employee');
     }
-
-    // Return employee data without trip information
-    const employeeData = {
-      ...employee
-    };
-
-    return {
-      status: 'Success',
-      data: employeeData
-    };
   }
 
   async update(id: string, updateEmployeeDto: UpdateEmployeeDto): Promise<any> {
