@@ -31,7 +31,7 @@ export class UsersService {
     const userRepository = this.databaseService.getRepository(User);
     const user = await userRepository.findOne({ 
       where: { id },
-      select: ['id', 'username', 'email', 'role', 'employee_id', 'country_id', 'branch_id', 'created_at']
+      select: ['id', 'username', 'email', 'role', 'employee_id', 'country_id', 'branch_id', 'created_at', 'designationId']
     });
     
     if (!user) {
@@ -47,7 +47,8 @@ export class UsersService {
       employee_id: user.employee_id,
       country_id: user.country_id,
       branch_id: user.branch_id,
-      created_at: user.created_at
+      created_at: user.created_at,
+      designationId: user.designationId
     };
   }
 
