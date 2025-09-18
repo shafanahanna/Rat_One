@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AssignDesignationDto } from './dto/assign-designation.dto';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../entities/user.entity';
 
@@ -167,5 +168,18 @@ export class UsersService {
       email: user.email,
       role: user.role
     }));
+  }
+
+  async assignDesignation(id: string, assignDesignationDto: AssignDesignationDto): Promise<User> {
+    const userRepository = this.databaseService.getRepository(User);
+    const user = await userRepository.findOne({ where: { id } });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    
+    // Update the user's designation
+    user.designationId = assignDesignationDto.designationId;
+    return userRepository.save(user);
   }
 }

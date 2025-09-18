@@ -36,6 +36,12 @@ export class DesignationsService {
       relations: ['department'],
     });
   }
+  
+  async findByName(name: string): Promise<Designation | null> {
+    return this.designationRepository.findOne({
+      where: { name },
+    });
+  }
 
   async findOne(id: string): Promise<Designation> {
     const designation = await this.designationRepository.findOne({
@@ -65,5 +71,51 @@ export class DesignationsService {
   async remove(id: string): Promise<void> {
     const designation = await this.findOne(id);
     await this.designationRepository.remove(designation);
+  }
+
+  /**
+   * Permission Management Methods
+   */
+  
+  async addPermission(id: string, permission: string): Promise<Designation> {
+    const designation = await this.findOne(id);
+    
+    if (!designation.permissions) {
+      designation.permissions = [];
+    }
+    
+    if (!designation.permissions.includes(permission)) {
+      designation.permissions.push(permission);
+      await this.designationRepository.save(designation);
+    }
+    
+    return designation;
+  }
+  
+  async removePermission(id: string, permission: string): Promise<Designation> {
+    const designation = await this.findOne(id);
+    
+    if (designation.permissions && designation.permissions.includes(permission)) {
+      designation.permissions = designation.permissions.filter(p => p !== permission);
+      await this.designationRepository.save(designation);
+    }
+    
+    return designation;
+  }
+  
+  async setPermissions(id: string, permissions: string[]): Promise<Designation> {
+    const designation = await this.findOne(id);
+    designation.permissions = permissions;
+    return this.designationRepository.save(designation);
+  }
+  
+  async getPermissions(id: string): Promise<string[]> {
+    const designation = await this.findOne(id);
+    return designation.permissions || [];
+  }
+  
+  async hasPermission(id: string, permission: string): Promise<boolean> {
+    const designation = await this.findOne(id);
+    return designation.permissions && designation.permissions.includes(permission);
   }
 }

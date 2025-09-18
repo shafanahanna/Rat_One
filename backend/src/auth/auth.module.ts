@@ -11,10 +11,12 @@ import { UsersController } from './users/users.controller';
 import { UsersService } from './users/users.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RolesModule } from './roles/roles.module';
+import { DesignationPermissionGuard } from './guards/designation-permission.guard';
+import { Designation } from '../designations/entities/designation.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Designation]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -27,7 +29,7 @@ import { RolesModule } from './roles/roles.module';
     RolesModule,
   ],
   controllers: [AuthController, UsersController],
-  providers: [AuthService, DatabaseService, UsersService, JwtStrategy],
-  exports: [AuthService, UsersService, JwtModule],
+  providers: [AuthService, DatabaseService, UsersService, JwtStrategy, DesignationPermissionGuard],
+  exports: [AuthService, UsersService, JwtModule, DesignationPermissionGuard],
 })
 export class AuthModule {}

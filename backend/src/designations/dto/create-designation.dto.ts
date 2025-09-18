@@ -17,4 +17,7 @@ export class CreateDesignationDto {
   @Min(1)
   @IsOptional()
   level?: number;
+
+  @IsOptional()
+  permissions?: string[];
 }

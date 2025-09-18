@@ -171,6 +171,17 @@ export class AuthService {
         }
       }
       
+      // Get user's designation if available
+      let designationId = null;
+      try {
+        if (user.designationId) {
+          designationId = user.designationId;
+        }
+      } catch (err) {
+        console.error('Error getting designation:', err);
+        // Continue without designation if there's an error
+      }
+
       const token = this.jwtService.sign(
         { 
           sub: user.id, 
@@ -179,7 +190,8 @@ export class AuthService {
           isUUID: isUUID,
           is_global: isAdmin,
           employeeId: employeeId,
-          role: user.role // Use the user's role from the database
+          role: user.role, // Use the user's role from the database
+          designationId: designationId // Include designation ID in token
         }
       );
 

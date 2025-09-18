@@ -71,4 +71,47 @@ export class DesignationsController {
       message: 'Designation deleted successfully'
     };
   }
+
+  /**
+   * Permission Management Endpoints
+   */
+  
+  @Get(':id/permissions')
+  async getPermissions(@Param('id') id: string) {
+    const permissions = await this.designationsService.getPermissions(id);
+    return {
+      success: true,
+      data: permissions
+    };
+  }
+  
+  @Put(':id/permissions')
+  async setPermissions(@Param('id') id: string, @Body() body: { permissions: string[] }) {
+    const designation = await this.designationsService.setPermissions(id, body.permissions);
+    return {
+      success: true,
+      message: 'Permissions updated successfully',
+      data: designation
+    };
+  }
+  
+  @Post(':id/permissions')
+  async addPermission(@Param('id') id: string, @Body() body: { permission: string }) {
+    const designation = await this.designationsService.addPermission(id, body.permission);
+    return {
+      success: true,
+      message: 'Permission added successfully',
+      data: designation
+    };
+  }
+  
+  @Delete(':id/permissions/:permission')
+  async removePermission(@Param('id') id: string, @Param('permission') permission: string) {
+    const designation = await this.designationsService.removePermission(id, permission);
+    return {
+      success: true,
+      message: 'Permission removed successfully',
+      data: designation
+    };
+  }
 }

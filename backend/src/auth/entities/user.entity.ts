@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Designation } from '../../designations/entities/designation.entity';
 
 @Entity('users')
 export class User {
@@ -25,6 +26,13 @@ export class User {
 
   @Column({ nullable: true })
   branch_id: string;
+
+  @Column({ nullable: true, name: 'designation_id' })
+  designationId: string;
+
+  @ManyToOne(() => Designation)
+  @JoinColumn({ name: 'designation_id' })
+  designation: Designation;
 
   @CreateDateColumn()
   created_at: Date;

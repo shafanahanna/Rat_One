@@ -162,7 +162,7 @@ const Designations = () => {
     setError(null);
     try {
       const token = localStorage.getItem('Admintoken');
-      const response = await axios.get(`${API_URL}/api/roles`, {
+      const response = await axios.get(`${API_URL}/api/designations`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -284,7 +284,7 @@ const Designations = () => {
     
     try {
       const token = localStorage.getItem('Admintoken');
-      const response = await axios.get(`${API_URL}/api/roles/${roleId}`, {
+      const response = await axios.get(`${API_URL}/api/designations/${roleId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -332,7 +332,7 @@ const Designations = () => {
       
       if (isEditMode) {
         await axios.put(
-          `${API_URL}/api/roles/${formData.id}`,
+          `${API_URL}/api/designations/${formData.id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -343,7 +343,7 @@ const Designations = () => {
         ));
       } else {
         const response = await axios.post(
-          `${API_URL}/api/roles`,
+          `${API_URL}/api/designations`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -380,7 +380,7 @@ const Designations = () => {
     
     try {
       const token = localStorage.getItem('Admintoken');
-      await axios.delete(`${API_URL}/api/roles/${roleToDelete.id}`, {
+      await axios.delete(`${API_URL}/api/designations/${roleToDelete.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

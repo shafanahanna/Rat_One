@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, UseGuards, Req, HttpStatus, HttpException,
 import { JwtAuthGuard } from '../jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AssignDesignationDto } from './dto/assign-designation.dto';
 import { UsersService } from './users.service';
 import { Permissions } from '../decorators/permissions.decorator';
 import { PermissionGuard } from '../guards/permission.guard';
@@ -111,7 +112,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @Permissions('users.delete')
   @Delete(':id')
-  async deleteUser(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     try {
       await this.usersService.remove(id);
       return {
@@ -119,11 +120,32 @@ export class UsersController {
         message: "User deleted successfully"
       };
     } catch (error) {
-      console.error("Error deleting user:", error);
       throw new HttpException({
         status: "Error",
-        message: "An internal error occurred while deleting the user."
-      }, HttpStatus.INTERNAL_SERVER_ERROR);
+        message: error.message || "Failed to delete user"
+      }, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @Permissions('users.edit')
+  @Put(':id/designation')
+  async assignDesignation(@Param('id') id: string, @Body() assignDesignationDto: AssignDesignationDto) {
+    try {
+      const user = await this.usersService.assignDesignation(id, assignDesignationDto);
+      return {
+        status: "Success",
+        message: "Designation assigned successfully",
+        data: {
+          id: user.id,
+          designationId: user.designationId
+        }
+      };
+    } catch (error) {
+      throw new HttpException({
+        status: "Error",
+        message: error.message || "Failed to assign designation"
+      }, HttpStatus.BAD_REQUEST);
     }
   }
 

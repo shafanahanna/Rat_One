@@ -22,6 +22,9 @@ export class Designation {
   @Column({ nullable: true, type: 'integer' })
   level: number;
 
+  @Column('simple-array', { nullable: true })
+  permissions: string[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

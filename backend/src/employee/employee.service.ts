@@ -8,15 +8,20 @@ import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { ProfilePictureDto } from './dto/profile-picture.dto';
 import { Employee } from './employee.entity';
+import { User } from '../auth/entities/user.entity';
+import { SyncDesignationService } from './sync-designation.service';
 
 @Injectable()
 export class EmployeeService {
   constructor(
     @InjectRepository(Employee)
     private employeeRepository: Repository<Employee>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private dataSource: DataSource,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private syncDesignationService: SyncDesignationService,
     @Inject('CLOUDINARY_SERVICE') private cloudinaryService: any,
   ) {}
 
@@ -83,6 +88,8 @@ export class EmployeeService {
       const savedEmployee = await queryRunner.manager.save(employee);
       console.log('Service: Employee saved successfully:', savedEmployee);
       
+      // Sync the user's designation with the employee's designation
+      await this.syncDesignationService.syncUserDesignation(createEmployeeDto.user_id, createEmployeeDto.designation);
       
       await queryRunner.commitTransaction();
 
@@ -192,7 +199,12 @@ export class EmployeeService {
 
     try {
       // Update employee record
-      if (updateEmployeeDto.designation) employee.designation = updateEmployeeDto.designation;
+      if (updateEmployeeDto.designation) {
+        employee.designation = updateEmployeeDto.designation;
+        // Sync the user's designation with the updated employee designation
+        await this.syncDesignationService.syncUserDesignation(employee.userId, updateEmployeeDto.designation);
+      }
+      
       if (updateEmployeeDto.department) employee.department = updateEmployeeDto.department;
       if (updateEmployeeDto.salary) {
         // If salary is changed, update salary status
@@ -262,8 +274,6 @@ export class EmployeeService {
         throw error;
       }
       throw new InternalServerErrorException('Failed to update employee profile');
-    } finally {
-      await queryRunner.release();
     }
   }
 
@@ -277,20 +287,6 @@ export class EmployeeService {
     // No need to check for trips as the relation doesn't exist
 
     // Start a transaction
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // Delete employee record
-      await queryRunner.manager.remove(employee);
-
-      // Update user role to Inactive
-      await queryRunner.query(
-        `UPDATE users SET role = 'Inactive' WHERE id = $1`,
-        [employee.userId]
-      );
-
       await queryRunner.commitTransaction();
 
       return {
@@ -331,6 +327,33 @@ export class EmployeeService {
     }
 
     return empCode;
+  }
+
+  /**
+   * Syncs the user's designation with the employee's designation
+   * This ensures that the user has the correct designation for permission checks
+   */
+  private async syncUserDesignation(userId: string, designationName: string): Promise<void> {
+    try {
+      // Find the designation by name
+      const designation = await this.designationsService.findByName(designationName);
+      
+      if (!designation) {
+        console.log(`Designation '${designationName}' not found, skipping user designation sync`);
+        return;
+      }
+      
+      // Update the user's designation
+      await this.userRepository.update(
+        { id: userId },
+        { designationId: designation.id }
+      );
+      
+      console.log(`Updated user ${userId} with designation ${designation.id} (${designationName})`);
+    } catch (error) {
+      console.error('Error syncing user designation:', error);
+      // Don't throw the error to avoid disrupting the main flow
+    }
   }
 
   /**

@@ -6,10 +6,14 @@ import { EmployeeController } from './employee.controller';
 import { EmployeeService } from './employee.service';
 import { Employee } from './employee.entity';
 import { CloudinaryProvider, CloudinaryService } from '../config/cloudinary.config';
+import { DesignationsModule } from '../designations/designations.module';
+import { User } from '../auth/entities/user.entity';
+import { SyncDesignationService } from './sync-designation.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Employee]),
+    TypeOrmModule.forFeature([Employee, User]),
+    DesignationsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -21,7 +25,7 @@ import { CloudinaryProvider, CloudinaryService } from '../config/cloudinary.conf
     ConfigModule,
   ],
   controllers: [EmployeeController, ],
-  providers: [EmployeeService, CloudinaryProvider, CloudinaryService],
-  exports: [EmployeeService],
+  providers: [EmployeeService, CloudinaryProvider, CloudinaryService, SyncDesignationService],
+  exports: [EmployeeService, SyncDesignationService],
 })
 export class EmployeeModule {}
