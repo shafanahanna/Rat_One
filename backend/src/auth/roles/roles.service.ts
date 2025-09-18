@@ -1,27 +1,27 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CustomRole } from './entities/role.entity';
+import { Designation } from '../../designations/entities/designation.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Injectable()
 export class RolesService {
   constructor(
-    @InjectRepository(CustomRole)
-    private readonly rolesRepository: Repository<CustomRole>,
+    @InjectRepository(Designation)
+    private readonly rolesRepository: Repository<Designation>,
   ) {}
 
-  async create(createRoleDto: CreateRoleDto): Promise<CustomRole> {
+  async create(createRoleDto: CreateRoleDto): Promise<Designation> {
     const role = this.rolesRepository.create(createRoleDto);
     return await this.rolesRepository.save(role);
   }
 
-  async findAll(): Promise<CustomRole[]> {
+  async findAll(): Promise<Designation[]> {
     return await this.rolesRepository.find();
   }
 
-  async findOne(id: string): Promise<CustomRole> {
+  async findOne(id: string): Promise<Designation> {
     const role = await this.rolesRepository.findOne({ where: { id } });
     if (!role) {
       throw new NotFoundException(`Role with ID ${id} not found`);
@@ -29,7 +29,7 @@ export class RolesService {
     return role;
   }
 
-  async update(id: string, updateRoleDto: UpdateRoleDto): Promise<CustomRole> {
+  async update(id: string, updateRoleDto: UpdateRoleDto): Promise<Designation> {
     const role = await this.findOne(id);
     
     // Update role properties

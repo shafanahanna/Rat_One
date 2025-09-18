@@ -287,6 +287,14 @@ export class EmployeeService {
     // No need to check for trips as the relation doesn't exist
 
     // Start a transaction
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Delete the employee
+      await queryRunner.manager.remove(employee);
+      
       await queryRunner.commitTransaction();
 
       return {
@@ -335,21 +343,8 @@ export class EmployeeService {
    */
   private async syncUserDesignation(userId: string, designationName: string): Promise<void> {
     try {
-      // Find the designation by name
-      const designation = await this.designationsService.findByName(designationName);
-      
-      if (!designation) {
-        console.log(`Designation '${designationName}' not found, skipping user designation sync`);
-        return;
-      }
-      
-      // Update the user's designation
-      await this.userRepository.update(
-        { id: userId },
-        { designationId: designation.id }
-      );
-      
-      console.log(`Updated user ${userId} with designation ${designation.id} (${designationName})`);
+      // Use the syncDesignationService to sync the user's designation
+      await this.syncDesignationService.syncUserDesignation(userId, designationName);
     } catch (error) {
       console.error('Error syncing user designation:', error);
       // Don't throw the error to avoid disrupting the main flow

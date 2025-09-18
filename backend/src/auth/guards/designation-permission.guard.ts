@@ -1,18 +1,14 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Designation } from '../../designations/entities/designation.entity';
+import { DesignationsService } from '../../designations/designations.service';
 
 @Injectable()
 export class DesignationPermissionGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(Designation)
-    private designationRepository: Repository<Designation>,
+    private designationsService: DesignationsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -44,9 +40,7 @@ export class DesignationPermissionGuard implements CanActivate {
       }
 
       // Find the user's designation with permissions
-      const designation = await this.designationRepository.findOne({
-        where: { id: user.designationId }
-      });
+      const designation = await this.designationsService.findOne(user.designationId);
       
       // If designation not found, deny access
       if (!designation) {

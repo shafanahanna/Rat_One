@@ -4,7 +4,7 @@ import { CreateDesignationDto } from './dto/create-designation.dto';
 import { UpdateDesignationDto } from './dto/update-designation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@Controller('designations')
+@Controller('api/designations')
 @UseGuards(JwtAuthGuard)
 export class DesignationsController {
   constructor(private readonly designationsService: DesignationsService) {}

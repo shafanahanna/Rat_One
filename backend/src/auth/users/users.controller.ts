@@ -5,13 +5,13 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { AssignDesignationDto } from './dto/assign-designation.dto';
 import { UsersService } from './users.service';
 import { Permissions } from '../decorators/permissions.decorator';
-import { PermissionGuard } from '../guards/permission.guard';
+import { DesignationPermissionGuard } from '../guards/designation-permission.guard';
 
 @Controller('api/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
   @Permissions('users.view')
   @Get()
   async getAllUsers() {
@@ -31,7 +31,7 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
   @Permissions('users.create')
   @Post()
   async addUser(@Body() createUserDto: CreateUserDto) {
@@ -60,7 +60,7 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
   @Permissions('users.view')
   @Get(':id')
   async getUser(@Param('id') id: string) {
@@ -80,7 +80,7 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
   @Permissions('users.edit')
   @Put(':id')
   async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -109,7 +109,7 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
   @Permissions('users.delete')
   @Delete(':id')
   async remove(@Param('id') id: string) {
@@ -127,7 +127,7 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
   @Permissions('users.edit')
   @Put(':id/designation')
   async assignDesignation(@Param('id') id: string, @Body() assignDesignationDto: AssignDesignationDto) {
@@ -149,7 +149,7 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, DesignationPermissionGuard)
   @Permissions(['users', 'hr']) // User needs either 'users' OR 'hr' permission
   @Get('unassigned')
   async getUnassignedUsers() {

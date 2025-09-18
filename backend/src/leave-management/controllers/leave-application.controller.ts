@@ -202,11 +202,11 @@ export class LeaveApplicationController {
       // If employeeId is not in the user object, try to find it
       if (!employeeId) {
         try {
-          const employee = await this.employeeService.findByUserId(user.userId);
+          const employee = await this.employeeService.findByUserId(user.id);
           employeeId = employee.id;
-          this.logger.log(`Found employee ID ${employeeId} for user ${user.userId}`);
+          this.logger.log(`Found employee ID ${employeeId} for user ${user.id}`);
         } catch (error) {
-          this.logger.error(`Error finding employee for user ${user.userId}: ${error.message}`);
+          this.logger.error(`Error finding employee for user ${user.id}: ${error.message}`);
           return {
             success: false,
             message: `Could not find employee record for the current user. Please contact HR.`,

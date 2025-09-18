@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Inject } from '@nestjs/common';
-import { RolesService } from './auth/roles/roles.service';
+import { DesignationsService } from './designations/designations.service';
 import { CreateRoleDto } from './auth/roles/dto/create-role.dto';
 import { UpdateRoleDto } from './auth/roles/dto/update-role.dto';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -7,52 +7,52 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 @Controller('roles')
 @UseGuards(JwtAuthGuard)
 export class RolesController {
-  constructor(private readonly rolesService: RolesService) {}
+  constructor(private readonly designationsService: DesignationsService) {}
 
   @Post()
   async create(@Body() createRoleDto: CreateRoleDto) {
-    const role = await this.rolesService.create(createRoleDto);
+    const designation = await this.designationsService.create(createRoleDto);
     return {
       success: true,
-      message: 'Role created successfully',
-      data: role
+      message: 'Designation created successfully',
+      data: designation
     };
   }
 
   @Get()
   async findAll() {
-    const roles = await this.rolesService.findAll();
+    const designations = await this.designationsService.findAll();
     return {
       success: true,
-      data: roles
+      data: designations
     };
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const role = await this.rolesService.findOne(id);
+    const designation = await this.designationsService.findOne(id);
     return {
       success: true,
-      data: role
+      data: designation
     };
   }
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
-    const role = await this.rolesService.update(id, updateRoleDto);
+    const designation = await this.designationsService.update(id, updateRoleDto);
     return {
       success: true,
-      message: 'Role updated successfully',
-      data: role
+      message: 'Designation updated successfully',
+      data: designation
     };
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    await this.rolesService.remove(id);
+    await this.designationsService.remove(id);
     return {
       success: true,
-      message: 'Role deleted successfully'
+      message: 'Designation deleted successfully'
     };
   }
 }

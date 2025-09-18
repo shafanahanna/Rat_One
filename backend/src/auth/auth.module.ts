@@ -10,9 +10,9 @@ import { User } from './entities/user.entity';
 import { UsersController } from './users/users.controller';
 import { UsersService } from './users/users.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { RolesModule } from './roles/roles.module';
 import { DesignationPermissionGuard } from './guards/designation-permission.guard';
 import { Designation } from '../designations/entities/designation.entity';
+import { DesignationsModule } from '../designations/designations.module';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { Designation } from '../designations/entities/designation.entity';
         signOptions: { expiresIn: '24h' },
       }),
     }),
-    RolesModule,
+    DesignationsModule,
   ],
   controllers: [AuthController, UsersController],
   providers: [AuthService, DatabaseService, UsersService, JwtStrategy, DesignationPermissionGuard],

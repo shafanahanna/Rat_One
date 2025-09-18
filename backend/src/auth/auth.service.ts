@@ -8,7 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { RegisterDto } from './dto/register.dto';
 import { User } from './entities/user.entity';
-import { RolesService } from './roles/roles.service';
+import { PermissionsService } from '../designations/permissions.service';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +17,7 @@ export class AuthService {
     private readonly dbService: DatabaseService,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private readonly rolesService: RolesService,
+    private readonly permissionsService: PermissionsService,
   ) {}
 
   // UUID validation regex

@@ -11,7 +11,7 @@ import { EmployeeModule } from './employee/employee.module';
 import { PayrollModule } from './payroll/payroll.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { LeaveManagementModule } from './leave-management/leave-management.module';
-import { RolesModule as AuthRolesModule } from './auth/roles/roles.module';
+// AuthRolesModule removed - using DesignationsModule instead
 import { RolesModule } from './roles.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { DesignationsModule } from './designations/designations.module';

@@ -32,8 +32,8 @@ async function bootstrap() {
     transform: true,
   }));
   
-  // API prefix
-  app.setGlobalPrefix('api');
+  // API prefix - commented out to avoid double prefixing with controller paths
+  // app.setGlobalPrefix('api');
   
   await app.listen(4000);
   console.log(`🚀 Application is running on: ${await app.getUrl()}`);
