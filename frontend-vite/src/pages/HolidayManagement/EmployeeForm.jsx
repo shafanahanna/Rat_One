@@ -57,11 +57,34 @@ const AddEmployee = () => {
           const selectedUser = unassignedUsers.find(
             (user) => user.id.toString() === value
           );
+          
+          // First update the basic user info
           setFormData((prev) => ({
             ...prev,
             user_id: value,
             full_name: selectedUser ? selectedUser.name : "",
           }));
+          
+          // If user is selected, check if they have a designation already
+          if (selectedUser && selectedUser.id) {
+            // Fetch user details to get their designation if available
+            const token = localStorage.getItem('Admintoken');
+            axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/api/users/${selectedUser.id}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            })
+            .then(response => {
+              if (response.data && response.data.data && response.data.data.designationId) {
+                // If user has a designation, update the form
+                setFormData(prev => ({
+                  ...prev,
+                  designation: response.data.data.designationId
+                }));
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching user details:', error);
+            });
+          }
         } else {
           setFormData((prev) => ({ ...prev, [name]: value }));
         }
