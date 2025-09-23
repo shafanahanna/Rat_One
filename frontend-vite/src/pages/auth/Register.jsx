@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser, clearError } from "../../redux/slices/authSlice";
-import { Eye, EyeOff, User, Lock, Mail, UserCircle, UserPlus } from "lucide-react";
+import { Eye, EyeOff, User, Lock, Mail, UserPlus } from "lucide-react";
 import logo from "../../Images/upcline-logo.png";
 
 // Animation utility function
@@ -13,16 +13,8 @@ const fadeInAnimation = (delay = 0) => {
   };
 };
 
-// User roles from backend enum
-const USER_ROLES = [
-  { value: "Director", label: "Director" },
-  { value: "HR", label: "HR" },
-  { value: "DM", label: "DM" },
-  { value: "TC", label: "TC" },
-  { value: "BA", label: "BA" },
-  { value: "RT", label: "RT" },
-  { value: "AC", label: "AC" },
-];
+// Default role for new users
+const DEFAULT_ROLE = "admin";
 
 function Register() {
   const navigate = useNavigate();
@@ -34,7 +26,7 @@ function Register() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "",
+    role: DEFAULT_ROLE,
   });
   const [passwordMismatch, setPasswordMismatch] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -67,7 +59,7 @@ function Register() {
       username: formData.username,
       email: formData.email,
       password_hash: formData.password,
-      role: formData.role,
+      role: DEFAULT_ROLE,
     };
 
     // Dispatch the register action
@@ -281,40 +273,8 @@ function Register() {
                 </div>
               </div>
 
-              {/* Role Selection */}
-              <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Role
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <UserCircle size={18} className="text-gray-400" />
-                  </div>
-                  <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-[#47BCCB] focus:border-[#47BCCB] text-gray-900 placeholder-gray-400 bg-white/50 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:shadow-sm appearance-none"
-                    required
-                  >
-                    <option value="" disabled>Select your role</option>
-                    {USER_ROLES.map((role) => (
-                      <option key={role.value} value={role.value}>
-                        {role.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
+              {/* Hidden role field - always admin */}
+              <input type="hidden" name="role" value={DEFAULT_ROLE} />
 
               {/* Error Message */}
               {(passwordMismatch || error) && (
