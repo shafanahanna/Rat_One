@@ -185,7 +185,7 @@ export class UsersService {
     }
     
     // Prevent deletion of admin user
-    if (user.email.toLowerCase() === 'admin@hayaltravel.com') {
+    if (user.email.toLowerCase() === 'admin@upcline.com') {
       throw new Error('Cannot delete admin user');
     }
     

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import Logo from "../Images/Rat one bold.png";
+import Logo from "../Images/upcline-logo.png";
 import axios from "axios";
 import { 
   Plane, 

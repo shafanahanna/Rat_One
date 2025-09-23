@@ -1,7 +1,7 @@
 {
-  "name": "hayal-product-backend",
+  "name": "upcline-backend",
   "version": "0.0.1",
-  "description": "Backend for Hayal Product application",
+  "description": "Backend for Upcline application",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

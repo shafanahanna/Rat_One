@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { registerUser, clearError } from "../../redux/slices/authSlice";
 import { Eye, EyeOff, User, Lock, Mail, UserCircle } from "lucide-react";
 import bgImage from "../../Images/Login.png";
-import logo from "../../Images/Rat one bold.png";
+import logo from "../../Images/upcline-logo.png";
 import Boy from "../../Images/Boy.png";
 import Girl from "../../Images/Girl.png";
 
@@ -93,7 +93,7 @@ function Register() {
         <div className="flex items-center justify-between my-auto gap-2 h-full px-10 sm:px-10 md:px-[50px]">
           <img
             src={logo}
-            alt="Best international travel agency in Kerala"
+            alt="Upcline logo"
             className="w-24 sm:w-28 md:w-32 h-auto"
           />
           <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
@@ -108,7 +108,7 @@ function Register() {
       <div className="hidden md:flex md:w-1/2 p-8 flex-col">
         <div className="text-center flex flex-col items-center justify-center h-full w-full">
           <h2 className="text-[30px] font-bold text-gray-800">
-            Welcome to HayalOne
+            Welcome to Upcline
           </h2>
           <p className="text-gray-600 mt-1 text-[25px]">
             Built for Us. Driven by Purpose
@@ -121,7 +121,7 @@ function Register() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-800">Sign up</h2>
-            <p className="text-gray-600 mt-1">to join HayalOne</p>
+            <p className="text-gray-600 mt-1">to join Upcline</p>
           </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>

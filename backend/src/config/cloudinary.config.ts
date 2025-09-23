@@ -21,7 +21,7 @@ export const CloudinaryService = {
         try {
           // Upload base64 image to Cloudinary
           const uploadResponse = await cloudinary.uploader.upload(base64Image, {
-            folder: 'hayal_profile_pictures',
+            folder: 'upcline_profile_pictures',
             transformation: [
               { width: 500, height: 500, crop: 'limit' },
               { quality: 'auto' }

@@ -47,7 +47,7 @@ const Layout = ({ children }) => {
             >
               <i className="fas fa-bars"></i>
             </button>
-            <div className="text-lg font-semibold">HayalProduct</div>
+            <div className="text-lg font-semibold">Upcline</div>
           </div>
         </header>
         

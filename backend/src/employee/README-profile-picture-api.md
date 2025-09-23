@@ -32,7 +32,7 @@ Uploads a profile picture for an employee and stores it in Cloudinary.
     "status": "Success",
     "message": "Profile picture updated successfully",
     "data": {
-      "profile_picture": "https://res.cloudinary.com/dvep621or/image/upload/v1629123456/hayal_profile_pictures/abcdef123456.jpg"
+      "profile_picture": "https://res.cloudinary.com/dvep621or/image/upload/v1629123456/upcline_profile_pictures/abcdef123456.jpg"
     }
   }
   ```
@@ -64,7 +64,7 @@ Retrieves the profile picture URL for an employee.
   {
     "status": "Success",
     "data": {
-      "profile_picture": "https://res.cloudinary.com/dvep621or/image/upload/v1629123456/hayal_profile_pictures/abcdef123456.jpg"
+      "profile_picture": "https://res.cloudinary.com/dvep621or/image/upload/v1629123456/upcline_profile_pictures/abcdef123456.jpg"
     }
   }
   ```
@@ -80,7 +80,7 @@ Retrieves the profile picture URL for an employee.
 - Images are uploaded to Cloudinary with the following transformations:
   - Width and height limited to 500px
   - Automatic quality optimization
-- Images are stored in the `hayal_profile_pictures` folder in Cloudinary
+- Images are stored in the `upcline_profile_pictures` folder in Cloudinary
 - The secure URL from Cloudinary is stored in the employee's `profilePicture` field in the database
 - The frontend uses the `ProfilePictureUploader` component to handle image selection, preview, and upload
 - The `adminInstance` axios instance is used for API communication with proper JWT authentication
