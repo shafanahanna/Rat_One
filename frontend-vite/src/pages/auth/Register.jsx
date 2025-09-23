@@ -100,10 +100,7 @@ function Register() {
             alt="Upcline logo"
             className="h-8 sm:h-10"
           />
-          <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-medium">
-            <span className="px-2 sm:px-3 py-1 rounded-full bg-gray-100 text-gray-700">UAE</span>
-            <span className="px-2 sm:px-3 py-1 rounded-full bg-gray-100 text-gray-700">IND</span>
-          </div>
+          {/* Header right side - intentionally left empty */}
         </div>
       </div>
 
